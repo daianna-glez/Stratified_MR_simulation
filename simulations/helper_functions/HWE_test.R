@@ -15,7 +15,7 @@
 #' @export 
 #' 
 
-HWE_test = function(n_aa, n_Aa, n_AA){
+HWE_test = function(n_aa, n_aA, n_AA){
 
   # Step 1: get observed allele frequencies
   N = n_aa + n_aA+ n_AA
@@ -44,7 +44,7 @@ HWE_test = function(n_aa, n_Aa, n_AA){
   #               1 df by fixed q (determining exp genotype counts) = 3 - 1 - 1
   pval = pchisq(X_sq, df=1, lower.tail = F)
   
-  res = c(CHISQ = X_sq, P.value = pval)
+  res = data.frame(CHISQ = unname(X_sq), P.value = unname(pval))
   
   return(res)
   

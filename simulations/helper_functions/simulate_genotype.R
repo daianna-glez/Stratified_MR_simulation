@@ -1,14 +1,14 @@
 
 #' @title Simulate genotype data 
 #' @description This function simulates genotypes in Hardy-Weinberg equilibrium for a bi-allelic SNP of MAF q across N individuals.
-#' @param N Total number of individuals. 
+#' @param N Number of individuals. 
 #' @param q Frequency for the minor allele of the SNP.
 #' @param centered Should the minor allele dosages be centered to 0 or not? Defaults to F.
 #' @return A numeric vector containing the minor allele dosages for all N individuals.  
 #' @examples 
 #' \dontrun{
 #' if(interactive()){
-#'  table(simulate_genotype(100, 0.25, F))
+#'  table(simulate_genotype(100, 0.25))
 #'  }
 #' }
 #' @rdname simulate_genotype
