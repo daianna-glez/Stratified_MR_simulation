@@ -3,6 +3,8 @@ library(tidyr)
 library(dplyr)
 library(ggplot2)
 library(cowplot)
+library(pheatmap)
+library(dichromat)
 
 ## Initialize
 rm(list = ls())
@@ -38,8 +40,8 @@ source("simulations/helper_functions/simulate_confounder.R")
 source("simulations/helper_functions/simulate_error.R")
 source("simulations/helper_functions/simulate_exposure.R")
 source("simulations/helper_functions/test_genetic_association.R")
+source("simulations/helper_functions/simulate_outcome.R")
 
-# source("simulations/helper_functions/simulate_outcome.R")
 # source("simulations/helper_functions/test_causal_effect.R")
 
 
@@ -92,8 +94,9 @@ source("simulations/helper_functions/test_genetic_association.R")
 # diff_BXY = 0.5
 # scenario = "scenario_1"
 # replicate = 1
+# sigma_sq = 0.05
 
-simulation_one_IV <- function(N, r, q1, q2, BGX1, diff_BGX, BXY1, diff_BXY, scenario, replicate){
+simulation_one_IV <- function(N, r, q1, q2, BGX1, diff_BGX, sigma_sq_BGX, BXY1, diff_BXY, sigma_sq_BXY, scenario, replicate, plotting){
   
   ## Output subdirs x scenario x replicate
   out_dir_sc <- paste(out_dir, scenario, sep = "/")
@@ -105,18 +108,18 @@ simulation_one_IV <- function(N, r, q1, q2, BGX1, diff_BGX, BXY1, diff_BXY, scen
   dir.create(plot_dir_sc_replicate, recursive = T, showWarnings = F)
   
   ## df to save results (and inputs)
-  out <- data.frame("replicate" = replicate, "N" = N, "r" = r, 
-                    "q1" = q1, "q2" = q2, "BGX1" = BGX1, "diff_BGX" = diff_BGX, 
-                    "BXY1" = BXY1, "diff_BXY" = diff_BXY)
-  
+  out <- data.frame("replicate" = replicate, "N" = N, "r" = r, "q1" = q1, "q2" = q2, 
+                    "BGX1" = BGX1, "diff_BGX" = diff_BGX, "sigma_sq_BGX" = sigma_sq_BGX,
+                    "BXY1" = BXY1, "diff_BXY" = diff_BXY, "sigma_sq_BXY" = sigma_sq_BXY)
   
   #  Step 1: Simulate strata: K | N, r
-  # ___________________________________________________________________
+  # ___________________________________________________________________________
     K = simulate_strata(N, r)
     
     ## Confirm N1/N2 = r
     if(table(K)["1"] / table(K)["2"] != r){
       message("Created strata don't meet r ratio")
+      stop()
     }
     ## Stratum sample sizes
     N1 = (r*N)/(r+1)
@@ -125,7 +128,7 @@ simulation_one_IV <- function(N, r, q1, q2, BGX1, diff_BGX, BXY1, diff_BXY, scen
     out <- cbind(out, "N1" = N1, "N2" = N2)
     
   #  Step 2: Simulate genotype for each stratum: Gk ~ Binom(2, qk) | Nk, qk
-  # ___________________________________________________________________
+  # ___________________________________________________________________________
     G1 = simulate_genotype(N1, q1)
     G2 = simulate_genotype(N2, q2)
     G = c(G1, G2)
@@ -138,8 +141,9 @@ simulation_one_IV <- function(N, r, q1, q2, BGX1, diff_BGX, BXY1, diff_BXY, scen
              "n_aA_2" = unname(table(G2)["1"]), 
              "n_AA_2" = unname(table(G2)["0"]))
     
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-    #  2.1: Chi-squared test for HWE deviations in each stratum and globally 
+    # -----------------------------------------------------------------------
+    #  2.1: Chi-squared test for HWE deviations in each stratum and globally
+    # -----------------------------------------------------------------------
 
     for(k in c(1, 2, "")){
      
@@ -174,10 +178,11 @@ simulation_one_IV <- function(N, r, q1, q2, BGX1, diff_BGX, BXY1, diff_BXY, scen
          out[,"HWE_P_global"] = HWE_res$P.value
        }
     }
-   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+    # -----------------------------------------------------------------------
      
     indiv_data <- data.frame("K" = K, "G" = G)
-       
+    
+    
   # Step 3: Simulate unknown confounder U ~ Unif(0,1) | N  
   # ___________________________________________________________________
     U = simulate_confounder(N)
@@ -190,161 +195,180 @@ simulation_one_IV <- function(N, r, q1, q2, BGX1, diff_BGX, BXY1, diff_BXY, scen
      
     indiv_data <- cbind(indiv_data, "eX" = eX, "eY" = eY)
      
-  # Step 5: Generate exposure Xk = βGXk(G) + U + εX
+  # Step 5: Generate exposure Xₖ = βɢxₖ(G) + U + εx
   # ___________________________________________________________________
      
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-    #  5.1: Draw βGXk from ~ N(βGXk, 0.01)
-      drawn_BGX1 <- rnorm(1, BGX1, 0.01)
-      drawn_BGX2 <- rnorm(1, BGX1 + diff_BGX, 0.01)
+    # -----------------------------------------------------------------
+    #  5.1: Draw βɢxₖ from ~ N(βɢxₖ, σβɢx²)
+    # -----------------------------------------------------------------
+      drawn_BGX1 <- rnorm(1, BGX1, sigma_sq_BGX)
+      drawn_BGX2 <- rnorm(1, BGX1 + diff_BGX, sigma_sq_BGX)
       
       out[, "drawn_BGX1"] = drawn_BGX1
       out[, "drawn_BGX2"] = drawn_BGX2
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+    # -----------------------------------------------------------------
     
-    X = simulate_exposure(K, G, U, eX, drawn_BGX1, drawn_BGX2)
+    X = simulate_exposure(indiv_data, cols = c("K", "G", "U", "eX"), drawn_BGX1, drawn_BGX2)
     indiv_data <- cbind(indiv_data, "X" = X)
     
-    
-  # Step 6: Test G effect on X: get β̂GXk
+  
+  # Step 6: Test G effect on X: get β̂ɢxₖ
   # ___________________________________________________________________
-  fit_X = test_genetic_association(indiv_data, cols = c("K", "G", "X"), out_dir_sc_replicate)
+    fit_X = test_genetic_association(indiv_data, cols = c("K", "G", "X"), out_dir_sc_replicate)
  
-  hat_BGX1 = fit_X$Estimate[1]
-  hat_BGX2 = fit_X$Estimate[2]
-  se_hat_BGX1 = fit_X$`Std. Error`[1]
-  se_hat_BGX2 = fit_X$`Std. Error`[2]
-  BGX_t_stat_1 = fit_X$`t value`[1]
-  BGX_t_stat_2 = fit_X$`t value`[2]
-  BGX_P_1 = fit_X$`Pr(>|t|)`[1]
-  BGX_P_2 = fit_X$`Pr(>|t|)`[2]
+    hat_BGX1 = fit_X$Estimate[1]
+    hat_BGX2 = fit_X$Estimate[2]
+    se_hat_BGX1 = fit_X$`Std. Error`[1]
+    se_hat_BGX2 = fit_X$`Std. Error`[2]
+    BGX_t_stat_1 = fit_X$`t value`[1]
+    BGX_t_stat_2 = fit_X$`t value`[2]
+    BGX_P_1 = fit_X$`Pr(>|t|)`[1]
+    BGX_P_2 = fit_X$`Pr(>|t|)`[2]
   
-  out <- cbind(out, "hat_BGX1" = hat_BGX1, "hat_BGX2" = hat_BGX2, 
-               "se_hat_BGX1" = se_hat_BGX1, "se_hat_BGX2" = se_hat_BGX2, 
-               "BGX_t_stat_1" = BGX_t_stat_1, "BGX_t_stat_2" = BGX_t_stat_2, 
-               "BGX_P_1" = BGX_P_1, "BGX_P_2" = BGX_P_2)
+    out <- cbind(out, "hat_BGX1" = hat_BGX1, "hat_BGX2" = hat_BGX2, 
+                      "se_hat_BGX1" = se_hat_BGX1, "se_hat_BGX2" = se_hat_BGX2, 
+                      "BGX_t_stat_1" = BGX_t_stat_1, "BGX_t_stat_2" = BGX_t_stat_2, 
+                      "BGX_P_1" = BGX_P_1, "BGX_P_2" = BGX_P_2)
   
-  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-  #  6.1: Confirm SNP is strong IV in both strata
-     fit_X$Fstat = fit_X$`t value` ** 2
+    # ----------------------------------------------------------------------
+    #  6.1: Confirm SNP is strong IV in both strata
+    # ----------------------------------------------------------------------
+       fit_X$Fstat = fit_X$`t value` ** 2
+    
+       if(any(fit_X$Fstat < 10)){
+         message("Stopping: weak instrument. Simulate different one.")
+         stop()
+       }
+       out <- cbind(out, "BGX_F_stat_1" = fit_X$Fstat[1],  
+                         "BGX_F_stat_2" = fit_X$Fstat[2])
+    # ----------------------------------------------------------------------
+    
+    ## Add pred X: X̂ = β̂ɢxₖ(G)
+    indiv_data$pred_X <- apply(indiv_data, 1, function(i){if(i["K"] == 1){i["G"]*hat_BGX1} else{i["G"]*hat_BGX2}})
+    
   
-     if(any(fit_X$Fstat < 10)){
-       message("Stopping: weak instrument. Simulate different one.")
-       stop()
-     }
-     out <- cbind(out, "BGX_F_stat_1" = fit_X$Fstat[1],  "BGX_F_stat_2" = fit_X$Fstat[2])
-  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-  
-  ## Add pred X 
-  indiv_data$pred_X <- apply(indiv_data, 1, function(i){if(i["K"] == 1){i["G"]*hat_BGX1} else{i["G"]*hat_BGX2}})
-  
-  
-  # * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-  # !!!  Sanity checks  !!!
-  # * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-  # Sanity check 1:
-  # -------------------------------------------------------
-  # Plot X ~ G, X ~ U, X ~ εX and X̂ ~ G, X̂ ~ U, X̂ ~ εX 
-  plot_pheno_vs_predictors(indiv_data, pheno_var = "X", predictors = c("G", "U", "eX"), out)
-  
-  # Sanity check 2:
-  # -------------------------------------------------------
-  # Estimated vs true effects in each stratum |βGXk - β̂GXk|
-  diff_BGX1 = abs(drawn_BGX1 - hat_BGX1)
-  diff_BGX2 = abs(drawn_BGX2 - hat_BGX2)
-  
-  out <- cbind(out, "diff_BGX1" = diff_BGX1, "diff_BGX2" = diff_BGX2)
-  
-  # Sanity check 3:
-  # -------------------------------------------------------
-  # Detected genetic effect difference ΔβGX = βGX2 - βGX1?
-  drawn_diff_BGX = drawn_BGX2 - drawn_BGX1
-  # Δβ̂GX = β̂GX2 - β̂GX1
-  hat_diff_BGX = hat_BGX2 - hat_BGX1
-  # Difference between true vs estimated delta |ΔβGX - Δβ̂GX|
-  diff_diff_BGX = abs(drawn_diff_BGX - hat_diff_BGX)
-  
-  out <- cbind(out, "drawn_diff_BGX" = drawn_diff_BGX, 
-                    "hat_diff_BGX" = hat_diff_BGX, 
-                    "diff_diff_BGX" = diff_diff_BGX)
-  
-  # Sanity check 4:
-  # -------------------------------------------------------
-  # Significant G x K interaction on X?
-  
-  # Z-stat = (β̂GX2 - β̂GX1) / √se(β̂GX2)² + se(β̂GX1)² 
-  se_hat_BGX1 = fit_X$`Std. Error`[1]
-  se_hat_BGX2 = fit_X$`Std. Error`[2]
-  
-  Z_diff_BGX = (hat_BGX2 - hat_BGX1) / sqrt(se_hat_BGX2^2 + se_hat_BGX1^2)
-  
-  # P val: Z-stat ~ N(0,1) | Ho
-  p_Z_diff_BGX = 2*pnorm(abs(Z_diff_BGX), 0, 1, lower.tail = F)
-  
-  out <- cbind(out, "se_hat_BGX1" = se_hat_BGX1, 
-                    "se_hat_BGX2" = se_hat_BGX2, 
-                    "Z_diff_BGX" = Z_diff_BGX, 
-                    "p_Z_diff_BGX" = p_Z_diff_BGX)
-  
-  # # * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-  
-  print(paste("|βGX1 - β̂GX1| =", signif(diff_BGX1, digits = 3)))
-  print(paste("|βGX2 - β̂GX2| =",  signif(diff_BGX2, digits = 3)))
-  print(paste("|ΔβGX - Δβ̂GX| =", signif(diff_diff_BGX, digits = 3)))
-  print(paste("Pval for G x K interaction:",  signif(p_Z_diff_BGX, digits = 3)))
-  
-  # Step 7: Generate outcome Yk = βXYk(G) + U + εY
+    # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+    #                !!!  Sanity checks  !!!                |
+    # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+    # Sanity check 1:
+    # -------------------------------------------------------
+    # Estimated vs true effects in each stratum |βGXk - β̂GXk|
+    diff_BGX1 = abs(drawn_BGX1 - hat_BGX1)
+    diff_BGX2 = abs(drawn_BGX2 - hat_BGX2)
+    
+    out <- cbind(out, "diff_BGX1" = diff_BGX1, "diff_BGX2" = diff_BGX2)
+    
+    # Sanity check 2:
+    # -------------------------------------------------------
+    # Detected genetic effect difference ΔβGX = βGX2 - βGX1?
+    drawn_diff_BGX = drawn_BGX2 - drawn_BGX1
+    # Δβ̂GX = β̂GX2 - β̂GX1
+    hat_diff_BGX = hat_BGX2 - hat_BGX1
+    # Difference between true vs estimated delta |ΔβGX - Δβ̂GX|
+    diff_diff_BGX = abs(drawn_diff_BGX - hat_diff_BGX)
+    
+    out <- cbind(out, "drawn_diff_BGX" = drawn_diff_BGX, 
+                      "hat_diff_BGX" = hat_diff_BGX, 
+                      "diff_diff_BGX" = diff_diff_BGX)
+    
+    # Sanity check 3:
+    # -------------------------------------------------------
+    # Significant G x K interaction on X?
+    
+    # Z-stat = (β̂GX2 - β̂GX1) / √se(β̂GX2)² + se(β̂GX1)² 
+    Z_diff_BGX = (hat_BGX2 - hat_BGX1) / sqrt(se_hat_BGX2^2 + se_hat_BGX1^2)
+    # P val: Z-stat ~ N(0,1) | Ho
+    p_Z_diff_BGX = 2*pnorm(abs(Z_diff_BGX), 0, 1, lower.tail = F)
+    
+    out <- cbind(out, "Z_diff_BGX" = Z_diff_BGX, 
+                      "p_Z_diff_BGX" = p_Z_diff_BGX)
+    
+    # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+  # Step 7: Generate outcome Yₖ = βxʏₖ(βɢxₖ)(G) + U + εʏ
   # ___________________________________________________________________
+    
+    # -----------------------------------------------------------------
+    #  7.1: Draw βxʏₖ from ~ N(βxʏₖ, σβxʏ²)
+    # -----------------------------------------------------------------
+    drawn_BXY1 <- rnorm(1, BXY1, sigma_sq_BXY)
+    drawn_BXY2 <- rnorm(1, BXY1 + diff_BXY, sigma_sq_BXY)
+    
+    out[, "drawn_BXY1"] = drawn_BXY1
+    out[, "drawn_BXY2"] = drawn_BXY2
+    # -----------------------------------------------------------------
+    
+    Y = simulate_outcome(indiv_data, cols = c("K", "G", "U", "eY"), 
+                         drawn_BGX1, drawn_BGX2, drawn_BXY1, drawn_BXY2)
+    indiv_data <- cbind(indiv_data, "Y" = Y)
   
-  
+  # Step 8: Test G association with Y: get β̂ɢʏₖ
   # ___________________________________________________________________
-  
-  return(c("hat_BGX1" = signif(hat_BGX1, digits = 3),
-           "hat_BGX2" = signif(hat_BGX2, digits = 3),
-           "se_hat_BGX1" = signif(se_hat_BGX1, digits = 3),
-           "se_hat_BGX2" = signif(se_hat_BGX2, digits = 3),
-           "t_stat_1" = signif(fit_X$t[1], digits = 3),
-           "t_stat_2" = signif(fit_X$t[1], digits = 3),
-           
-           "Fstat_1" = signif(fit_X$Fstat[1], digits = 3),
-           "Fstat_2" = signif(fit_X$Fstat[1], digits = 3),
-           
-           "diff_BGX1" = signif(diff_BGX1, digits = 3),
-           "diff_BGX2" = signif(diff_BGX2, digits = 3),
-           "diff_diff_BGX" = signif(diff_diff_BGX, digits = 3),
-           "Z_diff_BGX" = signif(Z_diff_BGX, digits = 3),
-           "p_Z_diff_BGX" = signif(p_Z_diff_BGX, digits = 3)
-           ))
+    fit_Y = test_genetic_association(indiv_data, cols = c("K", "G", "Y"), out_dir_sc_replicate)
+    
+    hat_BGY1 = fit_Y$Estimate[1]
+    hat_BGY2 = fit_Y$Estimate[2]
+    se_hat_BGY1 = fit_Y$`Std. Error`[1]
+    se_hat_BGY2 = fit_Y$`Std. Error`[2]
+    BGY_t_stat_1 = fit_Y$`t value`[1]
+    BGY_t_stat_2 = fit_Y$`t value`[2]
+    BGY_P_1 = fit_Y$`Pr(>|t|)`[1]
+    BGY_P_2 = fit_Y$`Pr(>|t|)`[2]
+    
+    out <- cbind(out, "hat_BGY1" = hat_BGY1, "hat_BGY2" = hat_BGY1, 
+                 "se_hat_BGY1" = se_hat_BGY1, "se_hat_BGY2" = se_hat_BGY2, 
+                 "BGY_t_stat_1" = BGY_t_stat_1, "BGY_t_stat_2" = BGY_t_stat_2, 
+                 "BGY_P_1" = BGY_P_1, "BGY_P_2" = BGY_P_2)
+    
+    ## Add Y pred by G: Ŷ =  β̂ɢʏₖ(G) 
+    indiv_data$pred_Y <- apply(indiv_data, 1, function(i){if(i["K"] == 1){i["G"]*hat_BGY1} else{i["G"]*hat_BGY2}})
+    
+
+    # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+    #                !!!  Sanity checks  !!!                |
+    # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+    # Sanity check 1:
+    # -------------------------------------------------------
+    if(plotting == T){
+      # Plot: X ~ G, U, εx
+      #       X̂ ~ G, U, εx
+      #       Y ~ X, X̂, G, U, εx, εʏ
+      #       Ŷ ~ X, X̂, G, U, εx, εʏ
+      plot_pheno_vs_predictors(indiv_data, pheno_var = "X", predictors = c("G", "U", "eX"), out, plot_dir_sc_replicate)
+      # Plot correlation between exposure/outcome and predictors
+      cor_pheno_predictors(indiv_data, variables = c("X", "pred_X", "G", "U", "eX"), plot_dir_sc_replicate)
+    }
+  return(out)
 }
 
 
 
-## Plot X/Y ~ G/X, U, eX/Y, and estimated effects in both strata
-
-plot_pheno_vs_predictor <- function(indiv_data, pheno_var, predictor, out){
+## Plot phenotype ~ predictor with estimated effects in both strata
+plot_pheno_vs_predictor <- function(indiv_data, pheno, predictor, out){
   
-  labels = c("G" = expression(G), 
+  labels = c("X" = expression(X),
+             "pred_X" = expression(hat(X) == hat(beta[GX])*G),
+             "Y" = expression(Y),
+             "pred_Y" = expression(hat(Y) == hat(beta[GY])*G),
+             "G" = expression(G), 
              "U" = expression(U), 
              "eX" = expression(epsilon[X]), 
-             "X" = expression(X), 
              "eY" = expression(epsilon[Y]))
   
-  pheno_var_lab = pheno_var
-  ypos1 = min(indiv_data[, pheno_var])+0.4
-  ypos2 = min(indiv_data[, pheno_var])+0.9
+  ypos1 = min(indiv_data[, pheno])+0.4
+  ypos2 = min(indiv_data[, pheno])+1.1
   
-  if(length(grep("pred", pheno_var))>0){
-    pheno_var_lab = expression(X == hat(beta)[GX]*G)
-    ypos1 = min(indiv_data[, pheno_var])+0.05
-    ypos2 = min(indiv_data[, pheno_var])+0.12
+  if(length(grep("pred", pheno))>0){
+    ypos1 = min(indiv_data[, pheno])+0.05
+    ypos2 = min(indiv_data[, pheno])+0.14
     }
   
-  p = ggplot(indiv_data, aes(x = get(predictor), y = get(pheno_var))) + 
+  p = ggplot(indiv_data, aes(x = get(predictor), y = get(pheno))) + 
     facet_grid(cols = vars(K), 
                labeller = labeller(K = c("1" = "Stratum 1", "2" = "Stratum 2"))) +
     geom_point(color='gray', alpha = 0.3, size = 1) +
     theme_classic() +
-    labs(x = labels[predictor], y = pheno_var_lab) +
+    labs(x = labels[predictor], y = labels[pheno]) +
     theme(axis.title = element_text(size = 8),
           axis.text = element_text(size = 7),
           strip.text.x = element_text(size = 8), 
@@ -354,44 +378,133 @@ plot_pheno_vs_predictor <- function(indiv_data, pheno_var, predictor, out){
           strip.background = element_rect(fill="white", color = "gray", linewidth = 0.7),
           panel.spacing = unit(0.4, "lines"))
   
-  if(predictor == "G"){
-    p <- p + scale_x_continuous(breaks = c(0,1,2), labels = c(0,1,2)) + 
-      ## Add estimated stratum-specific effects
+  if(pheno == "X" & predictor == "G"){
+    p <- p + scale_x_continuous(breaks = c(0,1,2), labels = c(0,1,2)) +
+      ## Add β̂ɢxₖ
       geom_abline(data = data.frame("hat_beta" = c(out$hat_BGX1, out$hat_BGX2), "K" = c(1,2)), 
-                  aes(slope = hat_beta, intercept = 0), linewidth = 0.65, alpha = 0.5, linetype = 1, color = "orangered2") +
+                  aes(slope = hat_beta, intercept = 0), linewidth = 0.65, alpha = 0.5, color = "orangered2") +
       geom_text(data = data.frame("hat_beta" = c(out$hat_BGX1, out$hat_BGX2), "K" = c(1,2)), 
-                aes(label = paste("hat(beta)[GX] ==", signif(hat_beta, digits = 2)), x = 1.75, y = ypos1), color = "orangered2", 
-                size = 3, parse = T) +
-      ## Add true (drawn) stratum-specific effects
+                aes(label = paste("hat(beta)[GX] ==", signif(hat_beta, digits = 2)), x = 1.75, y = min(indiv_data[, pheno])+0.4), color = "orangered2", size = 3, parse = T) +
+      ## Add true (drawn) βɢxₖ
       geom_abline(data = data.frame("drawn_beta" = c(out$drawn_BGX1, out$drawn_BGX2), "K" = c(1,2)), 
-                  aes(slope = drawn_beta, intercept = 0), linewidth = 0.65, alpha = 0.5, 
-                  linetype = 1, color = "purple3") +
+                  aes(slope = drawn_beta, intercept = 0), linewidth = 0.65, alpha = 0.5, color = "purple3") +
       geom_text(data = data.frame("drawn_beta" = c(out$drawn_BGX1, out$drawn_BGX2), "K" = c(1,2)), 
-                aes(label = paste("beta[GX] ==", signif(drawn_beta, digits = 2)), x = 1.75, y = ypos2), color = "purple3", 
-                size = 3, parse = T) 
+                aes(label = paste("beta[GX] ==", signif(drawn_beta, digits = 2)), x = 1.75, y = min(indiv_data[, pheno])+1.2), color = "purple3", size = 3, parse = T) 
   }
   
-  else if(predictor == "U"){
-    p <- p + geom_abline(slope = 1, intercept = 0, linewidth = 0.65, alpha = 0.7, 
-                         linetype = 1, color = "gray30") +
-      geom_text(x = 0.75, y = 0.5, label = paste("beta[UX] == 1"), color = 'gray30', size = 3, parse = T)
-  }
-  else if(predictor == "eX"){
-    p <- p + geom_abline(slope = 1, intercept = 0, linewidth = 0.65, alpha = 0.7, 
-                         linetype = 1, color = "gray30") +
-      geom_text(x = 2, y = 0.5, label = paste("beta[epsilon[X]] == 1"), color = 'gray30', size = 3, parse = T)
+  else if(pheno == "Y" & predictor == "G"){
+    p <- p + scale_x_continuous(breaks = c(0,1,2), labels = c(0,1,2)) +
+      ## Add β̂ɢʏₖ
+      geom_abline(data = data.frame("hat_beta" = c(out$hat_BGY1, out$hat_BGY2), "K" = c(1,2)), 
+                  aes(slope = hat_beta, intercept = 0), linewidth = 0.65, alpha = 0.5, color = "orangered2") +
+      geom_text(data = data.frame("hat_beta" = c(out$hat_BGY1, out$hat_BGY2), "K" = c(1,2)), 
+                aes(label = paste("hat(beta)[GY] ==", signif(hat_beta, digits = 2)), x = 1.75, y = min(indiv_data[, pheno])+0.4), color = "orangered2", size = 3, parse = T) +
+      ## Add true (drawn) βɢʏₖ = βɢxₖ x βxʏₖ 
+      geom_abline(data = data.frame("drawn_beta" = c(out$drawn_BGX1*out$drawn_BXY1, out$drawn_BGX2* out$drawn_BXY2), "K" = c(1,2)), 
+                  aes(slope = drawn_beta, intercept = 0), linewidth = 0.65, alpha = 0.5, color = "purple3") +
+      geom_text(data = data.frame("drawn_beta" = c(out$drawn_BGX1*out$drawn_BXY1, out$drawn_BGX2* out$drawn_BXY2), "K" = c(1,2)), 
+                aes(label = paste("beta[GY] ==", signif(drawn_beta, digits = 2)), x = 1.75, y = min(indiv_data[, pheno])+1.2), color = "purple3", size = 3, parse = T) 
   }
   
+  else if(pheno == "pred_X" & predictor == "G"){
+    p <- p + scale_x_continuous(breaks = c(0,1,2), labels = c(0,1,2)) +
+      ## Add β̂ɢxₖ
+      geom_abline(data = data.frame("hat_beta" = c(out$hat_BGX1, out$hat_BGX2), "K" = c(1,2)), 
+                  aes(slope = hat_beta, intercept = 0), linewidth = 0.65, alpha = 0.5, color = "orangered2") +
+      geom_text(data = data.frame("hat_beta" = c(out$hat_BGX1, out$hat_BGX2), "K" = c(1,2)), 
+                aes(label = paste("hat(beta)[GX] ==", signif(hat_beta, digits = 2)), x = 1.75, y = min(indiv_data[, pheno])+0.05), color = "orangered2", size = 3, parse = T) +
+      ## Add true (drawn) βɢxₖ
+      geom_abline(data = data.frame("drawn_beta" = c(out$drawn_BGX1, out$drawn_BGX2), "K" = c(1,2)), 
+                  aes(slope = drawn_beta, intercept = 0), linewidth = 0.65, alpha = 0.5, color = "purple3") +
+      geom_text(data = data.frame("drawn_beta" = c(out$drawn_BGX1, out$drawn_BGX2), "K" = c(1,2)), 
+                aes(label = paste("beta[GX] ==", signif(drawn_beta, digits = 2)), x = 1.75, y = min(indiv_data[, pheno])+0.14), color = "purple3", size = 3, parse = T) 
+  }
+  
+  else if(pheno == "X" & predictor == "U"){
+    p <- p + geom_abline(slope = 1, intercept = 0, linewidth = 0.65, alpha = 0.7, color = "gray30") +
+             geom_text(x = 0.75, y = 0.5, label = paste("beta[UX] == 1"), color = 'gray30', size = 3, parse = T)
+  }
+  
+  else if(pheno == "pred_X" & predictor == "U" ){
+    p <- p + geom_abline(slope = 0, intercept = 0, linewidth = 0.65, alpha = 0.7, color = "gray30") +
+             geom_text(x = 0.75, y = 0.5, label = paste("beta[U][hat(X)] == 0"), color = 'gray30', size = 3, parse = T)
+  }
+  
+  
+  else if(pheno == "X" & predictor == "eX"){
+    p <- p + geom_abline(slope = 1, intercept = 0, linewidth = 0.65, alpha = 0.7, color = "gray30") +
+             geom_text(x = 2, y = 0.5, label = paste("beta[epsilon[X]] == 1"), color = 'gray30', size = 3, parse = T)
+  }
+  
+  else if(pheno == "pred_X" & predictor == "eX"){
+    p <- p + geom_abline(slope = 0, intercept = 0, linewidth = 0.65, alpha = 0.7, color = "gray30") +
+             geom_text(x = 2, y = 0.5, label = paste("beta[epsilon[X]] == 0"), color = 'gray30', size = 3, parse = T)
+  }
+  
+  else if(pheno == "Y" & predictor == "eX"){
+    p <- p + geom_abline(slope = 0, intercept = 0, linewidth = 0.65, alpha = 0.7, color = "gray30") +
+      geom_text(x = 2, y = 0.5, label = paste("beta[epsilon[X]] == 0"), color = 'gray30', size = 3, parse = T)
+  }
+  
+  else if(pheno == "X" & predictor == "U"){
+  p <- p + geom_abline(slope = 1, intercept = 0, linewidth = 0.65, alpha = 0.7, color = "gray30") +
+           geom_text(x = 0.75, y = 0.5, label = paste("beta[UX] == 1"), color = 'gray30', size = 3, parse = T)
+  }
+  
+  else if(pheno == "pred_X" & predictor == "U" ){
+    p <- p + geom_abline(slope = 0, intercept = 0, linewidth = 0.65, alpha = 0.7, color = "gray30") +
+             geom_text(x = 0.75, y = 0.5, label = paste("beta[U][hat(X)] == 0"), color = 'gray30', size = 3, parse = T)
+  }
+  
+  else if(pheno == "Y" & predictor == "U"){
+    p <- p + geom_abline(slope = 1, intercept = 0, linewidth = 0.65, alpha = 0.7, color = "gray30") +
+             geom_text(x = 0.75, y = 0.5, label = paste("beta[UY] == 1"), color = 'gray30', size = 3, parse = T)
+  }
+  
+  else if(pheno == "pred_Y" & predictor == "U" ){
+    p <- p + geom_abline(slope = 0, intercept = 0, linewidth = 0.65, alpha = 0.7, color = "gray30") +
+             geom_text(x = 0.75, y = 0.5, label = paste("beta[U][hat(Y)] == 0"), color = 'gray30', size = 3, parse = T)
+  }
+  
+  else if(pheno == "Y" & predictor == "eY"){
+    p <- p + geom_abline(slope = 1, intercept = 0, linewidth = 0.65, alpha = 0.7, color = "gray30") +
+      geom_text(x = 2, y = 0.5, label = paste("beta[epsilon[Y]] == 0"), color = 'gray30', size = 3, parse = T)
+  }
+  
+  else if(pheno == "Y" & predictor == "X"){
+    ## Add β̂xʏₖ
+    p <- p + geom_abline(data = data.frame("hat_beta" = c(out$hat_BXY1, out$hat_BXY2), "K" = c(1,2)), 
+                  aes(slope = hat_beta, intercept = 0), linewidth = 0.65, alpha = 0.5, color = "orangered2") +
+      geom_text(data = data.frame("hat_beta" = c(out$hat_BXY1, out$hat_BXY2), "K" = c(1,2)), 
+                aes(label = paste("hat(beta)[XY] ==", signif(hat_beta, digits = 2)), x = 1.75, y = min(indiv_data[, pheno])+0.05), color = "orangered2", size = 3, parse = T) +
+      ## Add true (drawn) βxʏₖ
+      geom_abline(data = data.frame("drawn_beta" = c(out$drawn_BXY1, out$drawn_BXY2), "K" = c(1,2)), 
+                  aes(slope = drawn_beta, intercept = 0), linewidth = 0.65, alpha = 0.5, color = "purple3") +
+      geom_text(data = data.frame("drawn_beta" = c(out$drawn_BXY1, out$drawn_BXY2), "K" = c(1,2)), 
+                aes(label = paste("beta[XY] ==", signif(drawn_beta, digits = 2)), x = 1.75, y = min(indiv_data[, pheno])+0.14), color = "purple3", size = 3, parse = T) 
+    
+    }
+  
+  
+  
+  
+
   return(p)
 }
 
 
-plot_pheno_vs_predictors <- function(indiv_data, pheno_var, predictors, out, regressed_pheno = F){
-
+plot_pheno_vs_predictors <- function(indiv_data, predictors, out, plot_dir_sc_replicate){
+  
+  phenotypes <- c("X", "pred_X", "Y", "pred_Y")
+  predictors <- list("X" = c("G", "U", "eX"), 
+                     "pred_X" = c("G", "U", "eX"),
+                     "Y" = c("X", "pred_X", "G", "U", "eX", "eY"),
+                     "pred_Y" = c("X", "pred_X", "G", "U", "eX", "eY"))
   plots <- list()
   i = 1
-  for(pheno in c(pheno_var, paste0("pred_", pheno_var))){
-    for(predictor in predictors){
+  
+  for(pheno in phenotypes){
+    for(predictor in predictors[[pheno]]){
       plots[[i]] <- plot_pheno_vs_predictor(indiv_data, pheno, predictor, out)
       i = i + 1
     }
@@ -404,6 +517,31 @@ plot_pheno_vs_predictors <- function(indiv_data, pheno_var, predictors, out, reg
 }
   
 
+# Plot corr between X/Y and their predictors
+cor_pheno_predictors <- function(indiv_data, variables, plot_dir_sc_replicate){
+  
+  h <- list()
+  for(k in 1:2){
+    
+    data = subset(indiv_data, K == k)
+    
+    h[[k]] = pheatmap(cor(data[, variables]), 
+             color = colorRampPalette(c('#FFF0F5', '#EE0000'))(50),
+             display_numbers = T, 
+             cluster_rows = F, 
+             cluster_cols = F, 
+             main = paste("Stratum", k), 
+             border_color = "gray20", 
+             number_color = "black", 
+             fontsize = 10,
+             labels_row = c("X", expression(X == hat(beta[GX])*G), "G", "U", expression(epsilon[X])),
+             labels_col = c("X", expression(X == hat(beta[GX])*G), "G", "U", expression(epsilon[X])), 
+             angle_col = 90)$gtable
+  }
+  
+  plot_grid(plotlist = h, ncol = 2, align = "h")
+  ggsave(file = paste0(plot_dir_sc_replicate, "/Corr_predictors.pdf"), width = 8, height = 3.7)
+}
 
 
 
@@ -424,7 +562,10 @@ scenarios <- vector()
 N = 10000
 r = 1
 q1 = q2 = 0.25
-BGX1 = 0.4
+BGX1 = 0.7
+sigma_sq_BGX = sigma_sq_BXY = 0.05
+BXY1 = 0.8
+diff_BXY = 0
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                Scenario 1: No genetic effect difference ΔβGX = 0
@@ -432,18 +573,46 @@ BGX1 = 0.4
 diff_BGX = 0
 
 # ------------------------------------------------------------------------------
-# 1.0 Base model:  ΔβGX = 0, N = 10,000, r = 1, q1 = q2 = 0.25, βGX1 = 0.4
+# 1.0 Base model:  ΔβGX = 0, N = 10,000, r = 1, q1 = q2 = 0.25, βGX1 = 0.7
 # ------------------------------------------------------------------------------
 
 scenario_A1.0_res = vector()
 
 for(i in 1:100){
-  res = simulation_one_IV(N, r, q1, q2, BGX1, diff_BGX, BXY1 = NULL, diff_BXY = NULL, 
-                    scenario = "scenario_A1.0", replicate = i)
-  res = cbind(t(res), "replicate" = i)
-  scenario_A1.0 <- rbind(scenario_A1.0, res)
+  plotting_option = if_else(i <= 10, T, F)
+  res = simulation_one_IV(N, r, q1, q2, BGX1, diff_BGX, BXY1 = BXY1, diff_BXY = diff_BXY, sigma_sq_BGX =  sigma_sq_BGX, 
+                          sigma_sq_BXY = sigma_sq_BXY, 
+                          scenario = "scenario_A1.0", replicate = i, plotting = plotting_option)
+  scenario_A1.0_res <- rbind(scenario_A1.0_res, res)
   
 }
+save(scenario_A1.0_res, file = paste0(out_dir))
+## Mean of drawn BGX1 across replicates
+mean(scenario_A1.0_res$drawn_BGX1)
+mean(scenario_A1.0_res$drawn_BGX2)
+
+mean(scenario_A1.0_res$hat_BGX1)
+mean(scenario_A1.0_res$hat_BGX2)
+
+## Mean F-stat of SNP 
+mean(scenario_A1.0_res$BGX_F_stat_1)
+mean(scenario_A1.0_res$BGX_F_stat_2)
+
+## FPR in HWE
+mean(scenario_A1.0_res$HWE_P_1 < 0.05)
+mean(scenario_A1.0_res$HWE_P_2 < 0.05)
+mean(scenario_A1.0_res$HWE_P_global < 0.05)
+
+## FNR for estimated effects in each stratum
+mean(scenario_A1.0_res$BGX_P_1 >= 0.05)
+mean(scenario_A1.0_res$BGX_P_2 >= 0.05)
+
+mean(scenario_A1.0_res$diff_BGX1)
+mean(scenario_A1.0_res$diff_BGX2)
+
+## FPR for estimated effect differences 
+mean(scenario_A1.0_res$p_Z_diff_BGX < 0.05)
+
 
 
 ## Add scenario pars
