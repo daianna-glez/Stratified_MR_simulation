@@ -16,10 +16,14 @@
 
 simulate_strata = function(N, r){
   
-  stratum_1 <- rep(1, (r*N)/(r+1))
-  stratum_2 <- rep(2, N/(r+1))
+  stratum_1 <- rep(1, round((r*N)/(r+1)))
+  stratum_2 <- rep(2, round(N/(r+1)))
   
   K <- c(stratum_1, stratum_2)
+  
+  if(length(K) != N){
+    message("Stopping: not total N in strata generation.")
+  }
   
   return(K)
 }
