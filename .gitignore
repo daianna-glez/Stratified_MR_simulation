@@ -47,3 +47,7 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+
+
+## Individual level data x replicate
+*indiv_data*

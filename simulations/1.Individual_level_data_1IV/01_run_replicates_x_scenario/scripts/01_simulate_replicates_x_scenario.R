@@ -272,7 +272,7 @@ cor_pheno_predictors <- function(indiv_data, plot_dir_sc_replicate){
 
 ## Parameter definition:
 #' @param scenario string for main scenario name (one of 00, 01, 10, 11).
-#' @param sub_sce_varying_par string for sub scenario 1 name, according to varying parameter(s).
+#' @param sub_sce_sub_sce_varying_par string for sub scenario 1 name, according to varying parameter(s).
 #' @param sub_sce_varying_par_value string for sub scenario 2 name, according to the value(s) the varying parameter(s) take. 
 #' @param N int for total sample size.
 #' @param r double for ratio of stratum sample sizes.
@@ -287,15 +287,11 @@ cor_pheno_predictors <- function(indiv_data, plot_dir_sc_replicate){
 simulation_indiv_data_1IV <- function(scenario, sub_sce_varying_par, sub_sce_varying_par_value, N, r, q1, q2, BGX1, diff_BGX, BXY1, diff_BXY, replicate){
   
   ## Output subdirs x scenario x replicate
-  out_dir_sc <- paste(out_dir, scenario, sub_scenario1, sub_scenario2, sep = "/")
-  out_dir_sc_replicate <- paste(out_dir_sc, replicate, sep = "/")
-  plot_dir_sc <- paste(plot_dir, scenario, sub_scenario1, sub_scenario2, sep = "/")
-  plot_dir_sc_replicate <- paste(plot_dir_sc, replicate, sep = "/")
-  
-  dir.create(out_dir_sc_replicate, recursive = T, showWarnings = F)
+  out_dir_sc <- paste(out_dir, scenario, sub_sce_varying_par, sub_sce_varying_par_value, sep = "/")
+  dir.create(out_dir_sc, recursive = T, showWarnings = F)
   
   ## df to save results (and inputs)
-  out <- data.frame("scenario" = scenario, "sub_scenario1" = sub_scenario1, "sub_scenario2" = sub_scenario2, 
+  out <- data.frame("scenario" = scenario, "sub_sce_varying_par" = sub_sce_varying_par, "sub_sce_varying_par_value" = sub_sce_varying_par_value, 
                     "replicate" = replicate, "N" = N, "r" = r, "q1" = q1, "q2" = q2, 
                     "BGX1" = BGX1, "diff_BGX" = diff_BGX, "BXY1" = BXY1, "diff_BXY" = diff_BXY)
   
@@ -393,7 +389,7 @@ simulation_indiv_data_1IV <- function(scenario, sub_sce_varying_par, sub_sce_var
   
   # Step 6: Test G effect on X: get β̂ɢxₖ
   # ___________________________________________________________________
-  fit_X = test_genetic_association(indiv_data, cols = c("K", "G", "X"), out_dir_sc_replicate)
+  fit_X = test_genetic_association(indiv_data, cols = c("K", "G", "X"))
   
   hat_BGX1 = fit_X$Estimate[1]
   hat_BGX2 = fit_X$Estimate[2]
@@ -458,7 +454,7 @@ simulation_indiv_data_1IV <- function(scenario, sub_sce_varying_par, sub_sce_var
   p_Z_diff_BGX = 2*pnorm(abs(Z_diff_BGX), 0, 1, lower.tail = F)
   
   out <- cbind(out, "Z_diff_BGX" = Z_diff_BGX, 
-               "p_Z_diff_BGX" = p_Z_diff_BGX)
+                    "p_Z_diff_BGX" = p_Z_diff_BGX)
   
   # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
   
@@ -472,7 +468,7 @@ simulation_indiv_data_1IV <- function(scenario, sub_sce_varying_par, sub_sce_var
   
   # Step 8: Test G association with Y: get β̂ɢʏₖ
   # ___________________________________________________________________
-  fit_Y = test_genetic_association(indiv_data, cols = c("K", "G", "Y"), out_dir_sc_replicate)
+  fit_Y = test_genetic_association(indiv_data, cols = c("K", "G", "Y"))
   
   hat_BGY1 = fit_Y$Estimate[1]
   hat_BGY2 = fit_Y$Estimate[2]
@@ -574,6 +570,7 @@ simulation_indiv_data_1IV <- function(scenario, sub_sce_varying_par, sub_sce_var
   
   if(replicate <= 3){
     
+    plot_dir_sc_replicate <- paste(plot_dir, scenario, sub_sce_varying_par, sub_sce_varying_par_value, replicate, sep = "/")
     dir.create(plot_dir_sc_replicate, recursive = T, showWarnings = F)
     
     # Plot: X ~ G, U, εx
@@ -588,7 +585,7 @@ simulation_indiv_data_1IV <- function(scenario, sub_sce_varying_par, sub_sce_var
   # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
   
   ## Save indiv data generated
-  save(indiv_data, file = paste0(out_dir_sc_replicate, "/indiv_data.Rdata"))
+  save(indiv_data, file = paste0(out_dir_sc, "/indiv_data_rep", replicate, ".Rdata"))
   
   return(out)
 }
@@ -600,13 +597,133 @@ simulation_indiv_data_1IV <- function(scenario, sub_sce_varying_par, sub_sce_var
 
 ## Run 100 replicates x scenario
 n_rep = 100
+
 load(paste0(input_dir00, "/scenarios00.Rdata"), verbose = T)
 
-sim_args = scenarios00[2, ]
 
-for(i in 1:n_rep){
-  do.call(simulation_indiv_data_1IV)
+for (s in 4:10){
+  sim_args = scenarios00[s, ]
+  
+  scenario_res = vector()
+  for(i in 1:n_rep){
+    scenario_res = rbind(scenario_res, do.call(simulation_indiv_data_1IV, c(sim_args, i)))
+  }
+  
+  save(scenario_res, file = paste0(out_dir, "/", sim_args[1], "/", sim_args[2], "/", sim_args[3], "/scenario_res_across_", n_rep, "replicates.Rdata"))
+  
 }
+
+
+## Summary metrics x scenario
+scenario_metrics <- vector("mean_q1_ob" = mean(scenario_res$q1_ob), 
+                           "mean_q2_ob" = mean(scenario_res$q2_ob), 
+                           "mean_q_global_ob" = mean(scenario_res$q_global_ob), 
+                           "FPR_HWE_1" = mean(scenario_res$HWE_P_1 < 0.05), 
+                           "FPR_HWE_2" = mean(scenario_res$HWE_P_2 < 0.05), 
+                           "FPR_HWE_global" = mean(scenario_res$HWE_P_global < 0.05), 
+                           "mean_hat_BGX1" = mean(scenario_res$hat_BGX1), 
+                           "median_hat_BGX1" = median(scenario_res$hat_BGX1), 
+                           "mean_hat_BGX2" = mean(scenario_res$hat_BGX2), 
+                           "median_hat_BGX2" = median(scenario_res$hat_BGX2), 
+                           "FNR_BGX1" = mean(scenario_res$BGX_P_1 >= 0.05),
+                           "FNR_BGX2" = mean(scenario_res$BGX_P_2 >= 0.05),
+                           "TPR_BGX1" = mean(scenario_res$BGX_P_1 < 0.05),
+                           "TPR_BGX2" = mean(scenario_res$BGX_P_2 < 0.05),
+                           "mean_IV_F_stat_1" = mean(scenario_res$BGX_F_stat_1),
+                           "mean_IV_F_stat_2" = mean(scenario_res$BGX_F_stat_2),
+                           "mean_diff_BGX1" = mean(scenario_res$diff_BGX1),
+                           "mean_diff_BGX2" = mean(scenario_res$diff_BGX2),
+                           "mean_hat_diff_BGX" = mean(scenario_res$hat_diff_BGX), 
+                           "mean_diff_diff_BGX" = mean(scenario_res$diff_diff_BGX), 
+                           
+                           "mean_hat_BGY1" = mean(scenario_res$hat_BGY1), 
+                           "median_hat_BGY1" = median(scenario_res$hat_BGY1), 
+                           "mean_hat_BGY2" = mean(scenario_res$hat_BGY2), 
+                           "median_hat_BGY2" = median(scenario_res$hat_BGY2), 
+                           "mean_diff_BGY1" = mean(scenario_res$diff_BGY1),
+                           "mean_diff_BGY2" = mean(scenario_res$diff_BGY2),
+                           "mean_hat_diff_BGY" = mean(scenario_res$hat_diff_BGY), 
+                           "mean_diff_diff_BGY" = mean(scenario_res$diff_diff_BGY), 
+                           
+                           "mean_hat_BXY1" = mean(scenario_res$hat_BXY1), 
+                           "median_hat_BXY1" = median(scenario_res$hat_BXY1), 
+                           "mean_hat_BXY2" = mean(scenario_res$hat_BXY2), 
+                           "median_hat_BXY2" = median(scenario_res$hat_BXY2), 
+                           "mean_diff_BXY1" = mean(scenario_res$diff_BXY1),
+                           "mean_diff_BXY2" = mean(scenario_res$diff_BXY2),
+                           "mean_hat_diff_BXY" = mean(scenario_res$hat_diff_BXY), 
+                           "mean_diff_diff_BXY" = mean(scenario_res$diff_diff_BXY), 
+                           
+                           ## Compute se and p(hat BXY1), se and p(hat BXY2), Zdiff and P for hat diff BXY
+                           )
+
+
+
+if(diff_BGX == 0){
+  scenario_metrics <- append(scenario_metrics, "FPR_GxK_on_X" = mean(p_Z_diff_BGX < 0.05), 
+                                               "TNR_GxK_on_X" = mean(p_Z_diff_BGX >= 0.05))
+} else{
+  scenario_metrics <- append(scenario_metrics, "TPR_GxK_on_X" = mean(p_Z_diff_BGX < 0.05), 
+                                               "FNR_GxK_on_X" = mean(p_Z_diff_BGX >= 0.05))
+}
+
+if(BGY1 == 0){
+  scenario_metrics <- append(scenario_metrics, "FPR_BGY1" = mean(BGY_P_1 < 0.05),
+                                               "TNR_BGY1" = mean(BGY_P_1 >= 0.05))
+} else{
+  scenario_metrics <- append(scenario_metrics, "TPR_BGY1" = mean(BGY_P_1 < 0.05),
+                                               "FNR_BGY1" = mean(BGY_P_1 >= 0.05))
+}
+
+if(BGY2 == 0){
+  scenario_metrics <- append(scenario_metrics, "FPR_BGY2" = mean(BGY_P_2 < 0.05),
+                                               "TNR_BGY2" = mean(BGY_P_2 >= 0.05))
+} else{
+  scenario_metrics <- append(scenario_metrics, "TPR_BGY2" = mean(BGY_P_2 < 0.05),
+                                               "FNR_BGY2" = mean(BGY_P_2 >= 0.05))
+}
+
+
+if(diff_BGY == 0){
+  scenario_metrics <- append(scenario_metrics, "FPR_GxK_on_Y" = mean(p_Z_diff_BGY < 0.05), 
+                             "TNR_GxK_on_Y" = mean(p_Z_diff_BGY >= 0.05))
+} else{
+  scenario_metrics <- append(scenario_metrics, "TPR_GxK_on_Y" = mean(p_Z_diff_BGY < 0.05), 
+                             "FNR_GxK_on_Y" = mean(p_Z_diff_BGY >= 0.05))
+}
+
+
+
+
+
+
+# TODO 
+if(BXY1 == 0){
+  scenario_metrics <- append(scenario_metrics, "FPR_BXY1" = mean(BXY_P_1 < 0.05),
+                             "TNR_BXY1" = mean(BXY_P_1 >= 0.05))
+} else{
+  scenario_metrics <- append(scenario_metrics, "TPR_BXY1" = mean(BXY_P_1 < 0.05),
+                             "FNR_BXY1" = mean(BXY_P_1 >= 0.05))
+}
+
+if(BXY2 == 0){
+  scenario_metrics <- append(scenario_metrics, "FPR_BXY2" = mean(BXY_P_2 < 0.05),
+                             "TNR_BXY2" = mean(BXY_P_2 >= 0.05))
+} else{
+  scenario_metrics <- append(scenario_metrics, "TPR_BXY2" = mean(BXY_P_2 < 0.05),
+                             "FNR_BXY2" = mean(BXY_P_2 >= 0.05))
+}
+
+
+if(diff_BXY == 0){
+  scenario_metrics <- append(scenario_metrics, "FPR_XxK_on_Y" = mean(p_Z_diff_BXY < 0.05), 
+                             "TNR_XxK_on_Y" = mean(p_Z_diff_BXY >= 0.05))
+} else{
+  scenario_metrics <- append(scenario_metrics, "TPR_XxK_on_Y" = mean(p_Z_diff_BXY < 0.05), 
+                             "FNR_XxK_on_Y" = mean(p_Z_diff_BXY >= 0.05))
+}
+
+
 
 
 
