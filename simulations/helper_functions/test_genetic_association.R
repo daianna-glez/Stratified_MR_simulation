@@ -1,6 +1,6 @@
 
 #' @title Test genetic association with a trait (exposure X or outcome Y) per stratum.
-#' @description This function fits a linear model to assess the association of a genetic variant with a continuous trait in each stratum.
+#' @description This function fits a linear model through Ordinary Least Squares to assess the association of a genetic variant with a continuous trait in each stratum.
 #' @param data data.frame with columns for stratifying variable, genotype, and trait across all N individuals.
 #' @param cols vector with column names for stratifying variable (K), genotype (G), and trait (P). 
 #' @param out_dir_sc_replicate optional output path to save model fit results per stratum. 
@@ -32,8 +32,9 @@ test_genetic_association = function(data, cols, out_dir_sc_replicate = NULL){
     save(res, file = paste0(out_dir_sc_replicate, "/stratum_fit_res_G_on_", P, ".Rdata"))}
   
   ## Data frame with estimated genetic effects and associated stats
-  df = do.call(rbind, lapply(res, function(k){summary(k)$coefficients["G",]})) %>% as.data.frame()
+  df = do.call(rbind, lapply(res, function(k){c(summary(k)$coefficients["G",], summary(k)$f)})) %>% as.data.frame()
   df$K = c(1, 2)
+  colnames(df)[5] <- "Fstat"
  
   return(df)
 }

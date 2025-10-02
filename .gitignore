@@ -51,3 +51,7 @@ rsconnect/
 
 ## Individual level data x replicate
 *indiv_data*
+
+## Sanity plots x replicate
+*Corr_predictors.pdf*
+*X_Y_on_predictors.pdf*
