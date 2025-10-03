@@ -1,16 +1,10 @@
 
-#' @title Test genetic association with a trait (exposure X or outcome Y) per stratum.
+#' @title Test genetic association with a trait (exposure X or outcome Y) per stratum
 #' @description This function fits a linear model through Ordinary Least Squares to assess the association of a genetic variant with a continuous trait in each stratum.
 #' @param data data.frame with columns for stratifying variable, genotype, and trait across all N individuals.
 #' @param cols vector with column names for stratifying variable (K), genotype (G), and trait (P). 
 #' @param out_dir_sc_replicate optional output path to save model fit results per stratum. 
 #' @return A data.frame containing the estimated genetic effect β̂, se, t-statistic, and p-value, in each stratum. 
-#' @examples 
-#' \dontrun{
-#' if(interactive()){
-#'  test_genetic_association(indiv_data, c("K", "G", "X"), out_dir_sc_replicate)
-#'  }
-#' }
 #' @rdname test_genetic_association
 #' @export
 

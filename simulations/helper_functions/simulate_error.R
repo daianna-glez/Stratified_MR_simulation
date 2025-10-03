@@ -8,7 +8,7 @@
 
 
 simulate_error = function(N){
-  
+
   e = rnorm(N, mean = 0, sd = 1)
   return(e)
   
