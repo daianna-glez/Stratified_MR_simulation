@@ -110,7 +110,7 @@ plot_pheno_vs_predictor <- function(indiv_data, pheno, predictor, out){
   else if(predictor == "U"){
     
     if(pheno == "X"){
-      slope = 1
+      slope = out$BUX
       label = paste("beta[UX] == 1")
     }
     else if(pheno == "pred_X"){
@@ -118,7 +118,7 @@ plot_pheno_vs_predictor <- function(indiv_data, pheno, predictor, out){
       label = paste("beta[U][hat(X)] == 0")
     }
     else if(pheno == "Y"){
-      slope = 1
+      slope = out$BUY
       label = paste("beta[UY] == 1")
     }
     else if(pheno == "pred_Y"){
@@ -283,9 +283,11 @@ cor_pheno_predictors <- function(indiv_data, plot_dir_sc_replicate){
 #' @param diff_BGX double for true difference in the effect of IV on X between stratum 2 and 1.
 #' @param BXY1 double for true casual effect in stratum 1.
 #' @param diff_BXY double for true difference in the causal effect between stratum 2 and 1.
+#' @param BUX int for effect of confounder on X (assumed to be the same across strata).
+#' @param BUY int for effect of confounder on Y (assumed to be the same across strata).
 #' @param replicate int for replicate number.
 
-simulation_indiv_data_1IV <- function(scenario, sub_sce_varying_par, sub_sce_varying_par_value, N, r, q1, q2, BGX1, diff_BGX, BXY1, diff_BXY, replicate){
+simulation_indiv_data_1IV <- function(scenario, sub_sce_varying_par, sub_sce_varying_par_value, N, r, q1, q2, BGX1, diff_BGX, BXY1, diff_BXY, BUX, BUY, replicate){
   
   ## Output subdirs x scenario x replicate
   out_dir_sc <- paste(out_dir, scenario, sub_sce_varying_par, sub_sce_varying_par_value, sep = "/")
@@ -294,20 +296,20 @@ simulation_indiv_data_1IV <- function(scenario, sub_sce_varying_par, sub_sce_var
   ## df to save results (and inputs)
   out <- data.frame("scenario" = scenario, "sub_sce_varying_par" = sub_sce_varying_par, "sub_sce_varying_par_value" = sub_sce_varying_par_value, 
                     "replicate" = replicate, "N" = N, "r" = r, "q1" = q1, "q2" = q2, 
-                    "BGX1" = BGX1, "diff_BGX" = diff_BGX, "BXY1" = BXY1, "diff_BXY" = diff_BXY)
+                    "BGX1" = BGX1, "diff_BGX" = diff_BGX, "BXY1" = BXY1, "diff_BXY" = diff_BXY, "BUX" = BUX, "BUY" = BUY)
   
   #  Step 1: Simulate strata: K | N, r
   # ___________________________________________________________________________
   K = simulate_strata(N, r)
   
   ## Confirm N1/N2 = r
-  if(table(K)["1"] / table(K)["2"] != r){
-    message("Created strata don't meet r ratio")
+  if(round(table(K)["1"] / table(K)["2"], digits = 2) != r){
+    message("Created strata don't satisfy r ratio")
     stop()
   }
   ## Stratum sample sizes
-  N1 = (r*N)/(r+1)
-  N2 = N/(r+1)
+  N1 = table(K)["1"] 
+  N2 = table(K)["2"]
   
   out <- cbind(out, "N1" = N1, "N2" = N2)
   
@@ -384,7 +386,10 @@ simulation_indiv_data_1IV <- function(scenario, sub_sce_varying_par, sub_sce_var
   ## Define βɢx₂
   BGX2 = BGX1 + diff_BGX
   
-  X = simulate_exposure(indiv_data, cols = c("K", "G", "U", "eX"), BGX1, BGX2)
+  ## Add βɢx to use according to k
+  indiv_data$BGX <- c(rep(BGX1, N1), rep(BGX2, N2))
+  
+  X = simulate_exposure(indiv_data, cols = c("K", "G", "U", "eX", "BGX"), BUX)
   indiv_data <- cbind(indiv_data, "X" = X)
   
   
@@ -418,8 +423,8 @@ simulation_indiv_data_1IV <- function(scenario, sub_sce_varying_par, sub_sce_var
   # ----------------------------------------------------------------------
   
   ## Add pred X: X̂ = β̂ɢxₖ(G)
-  indiv_data$pred_X <- apply(indiv_data, 1, function(i){if(i["K"] == 1){i["G"]*hat_BGX1} else{i["G"]*hat_BGX2}})
-  
+  indiv_data$hat_BGX <- c(rep(hat_BGX1, N1), rep(hat_BGX2, N2))
+  indiv_data$pred_X <- indiv_data$G * indiv_data$hat_BGX
   
   # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
   #                !!!  Sanity checks  !!!                |
@@ -440,8 +445,7 @@ simulation_indiv_data_1IV <- function(scenario, sub_sce_varying_par, sub_sce_var
   # Difference between true vs estimated delta |Δβɢx - Δβ̂ɢx|
   diff_diff_BGX = abs(diff_BGX - hat_diff_BGX)
   
-  out <- cbind(out, "hat_diff_BGX" = hat_diff_BGX, 
-               "diff_diff_BGX" = diff_diff_BGX)
+  out <- cbind(out, "hat_diff_BGX" = hat_diff_BGX, "diff_diff_BGX" = diff_diff_BGX)
   
   # Sanity check 3:
   # -------------------------------------------------------
@@ -462,7 +466,10 @@ simulation_indiv_data_1IV <- function(scenario, sub_sce_varying_par, sub_sce_var
   ## Define βxʏ₂
   BXY2 = BXY1 + diff_BXY
   
-  Y = simulate_outcome(indiv_data, cols = c("K", "G", "U", "eY"), BGX1, BGX2, BXY1, BXY2)
+  ## Add βxʏ to use according to k
+  indiv_data$BXY <- c(rep(BXY1, N1), rep(BXY2, N2))
+  
+  Y = simulate_outcome(indiv_data, cols = c("K", "G", "U", "eY", "BGX", "BXY"), BUY)
   indiv_data <- cbind(indiv_data, "Y" = Y)
   
   # Step 8: Test G association with Y: get β̂ɢʏₖ
@@ -484,7 +491,8 @@ simulation_indiv_data_1IV <- function(scenario, sub_sce_varying_par, sub_sce_var
                "BGY_P_1" = BGY_P_1, "BGY_P_2" = BGY_P_2)
   
   ## Add Y pred by G: Ŷ =  β̂ɢʏₖ(G) 
-  indiv_data$pred_Y <- apply(indiv_data, 1, function(i){if(i["K"] == 1){i["G"]*hat_BGY1} else{i["G"]*hat_BGY2}})
+  indiv_data$hat_BGY <- c(rep(hat_BGY1, N1), rep(hat_BGY2, N2))
+  indiv_data$pred_Y <- indiv_data$G * indiv_data$hat_BGY
   
   # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
   #                !!!  Sanity checks  !!!                |
@@ -497,8 +505,7 @@ simulation_indiv_data_1IV <- function(scenario, sub_sce_varying_par, sub_sce_var
   diff_BGY1 = abs(BGY1 - hat_BGY1)
   diff_BGY2 = abs(BGY2 - hat_BGY2)
   
-  out <- cbind(out, "BGY1" = BGY1, "BGY2" = BGY2, 
-               "diff_BGY1" = diff_BGY1, "diff_BGY2" = diff_BGY2)
+  out <- cbind(out, "BGY1" = BGY1, "BGY2" = BGY2, "diff_BGY1" = diff_BGY1, "diff_BGY2" = diff_BGY2)
   
   # Sanity check 2:
   # -------------------------------------------------------
@@ -523,7 +530,7 @@ simulation_indiv_data_1IV <- function(scenario, sub_sce_varying_par, sub_sce_var
   p_Z_diff_BGY = 2*pnorm(abs(Z_diff_BGY), 0, 1, lower.tail = F)
   
   out <- cbind(out, "Z_diff_BGY" = Z_diff_BGY, 
-               "p_Z_diff_BGY" = p_Z_diff_BGY)
+                    "p_Z_diff_BGY" = p_Z_diff_BGY)
   
   # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
   
@@ -554,8 +561,7 @@ simulation_indiv_data_1IV <- function(scenario, sub_sce_varying_par, sub_sce_var
   # Difference 
   diff_diff_BXY = abs(diff_BXY - hat_diff_BXY)
   
-  out <- cbind(out, "hat_diff_BXY" = hat_diff_BXY, 
-               "diff_diff_BXY" = diff_diff_BXY)
+  out <- cbind(out, "hat_diff_BXY" = hat_diff_BXY, "diff_diff_BXY" = diff_diff_BXY)
   
   # Significant X x K interaction on Y? se?????
   # -------------------------------------------------------
@@ -567,7 +573,7 @@ simulation_indiv_data_1IV <- function(scenario, sub_sce_varying_par, sub_sce_var
   # out <- cbind(out, "Z_diff_BXY" = Z_diff_BXY, 
   #              "p_Z_diff_BXY" = p_Z_diff_BXY)
   
-  if(replicate <= 3){
+  if(replicate == 1){
     
     plot_dir_sc_replicate <- paste(plot_dir, scenario, sub_sce_varying_par, sub_sce_varying_par_value, replicate, sep = "/")
     dir.create(plot_dir_sc_replicate, recursive = T, showWarnings = F)
@@ -594,10 +600,9 @@ simulation_indiv_data_1IV <- function(scenario, sub_sce_varying_par, sub_sce_var
 ## Run 100 replicates x scenario
 n_rep = 100
 
-load(paste0(input_dir00, "/scenarios00.Rdata"), verbose = T)
+load(paste0(input_dir00, "/scenario.00.Rdata"), verbose = T)
 
-
-for (s in 1){
+for (s in 12:19){
   sim_args = scenarios00[s, ]
   
   scenario_res = vector()
@@ -611,9 +616,16 @@ for (s in 1){
 }
 
 
-
-
-
+N = sim_args["N"] %>% as.numeric()
+r = sim_args["r"] %>% as.numeric()
+q1 = sim_args["q1"] %>% as.numeric()
+q2 = sim_args["q2"] %>% as.numeric()
+BGX1 = sim_args["BGX1"] %>% as.numeric()
+diff_BGX = sim_args["diff_BGX"] %>% as.numeric()
+BXY1 = sim_args["BXY1"] %>% as.numeric()
+diff_BXY = sim_args["diff_BXY"] %>% as.numeric()
+BUX = sim_args["BUX"] %>% as.numeric()
+BUY = sim_args["BUY"] %>% as.numeric()
 
 
 ## Reproducibility info
