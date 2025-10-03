@@ -4,12 +4,6 @@
 #' @param N Total number of individuals. 
 #' @param r Ratio of stratum sample sizes (N1/N2). 
 #' @return K, a binary vector indicating the stratum each individual was assigned to.  
-#' @examples 
-#' \dontrun{
-#' if(interactive()){
-#'  table(simulate_strata(1000, 0.33))
-#'  }
-#' }
 #' @rdname simulate_strata
 #' @export
 
