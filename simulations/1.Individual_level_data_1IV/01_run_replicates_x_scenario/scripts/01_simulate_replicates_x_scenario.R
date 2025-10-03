@@ -581,7 +581,7 @@ simulation_indiv_data_1IV <- function(scenario, sub_sce_varying_par, sub_sce_var
     #       X̂ ~ G, U, εx
     #       Y ~ X, X̂, G, U, εx, εʏ
     #       Ŷ ~ X, X̂, G, U, εx, εʏ
-    plot_pheno_vs_predictors(indiv_data, out, plot_dir_sc_replicate)
+    # plot_pheno_vs_predictors(indiv_data, out, plot_dir_sc_replicate)
     # Plot correlation between exposure/outcome and predictors
     cor_pheno_predictors(indiv_data, plot_dir_sc_replicate)
   }
@@ -601,7 +601,7 @@ n_rep = 100
 
 load(paste0(input_dir00, "/scenario.00.Rdata"), verbose = T)
 
-for (s in 12:19){
+for (s in 20:44){
   sim_args = scenarios00[s, ]
   
   scenario_res = vector()
@@ -626,6 +626,9 @@ diff_BXY = sim_args["diff_BXY"] %>% as.numeric()
 BUX = sim_args["BUX"] %>% as.numeric()
 BUY = sim_args["BUY"] %>% as.numeric()
 
+scenario = sim_args["scenario"]
+sub_sce_varying_par = sim_args["sub_sce_varying_par"]
+sub_sce_varying_par_value = sim_args["sub_sce_varying_par_value"]
 
 ## Reproducibility info
 session_info()
