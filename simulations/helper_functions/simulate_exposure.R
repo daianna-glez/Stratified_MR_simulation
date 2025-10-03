@@ -2,17 +2,11 @@
 #' @title Simulate exposure
 #' @description This function simulates the exposure for all N individuals, according to the stratum they belong to.
 #' @param data data.frame with columns for stratifying variable, genotype, confounder, and error terms across all N individuals.
-#' @param cols vector with column names for stratifying variable (K), genotype (G), confounder (U), and errors (eX). 
+#' @param cols vector with column names for stratifying variable (K), genotype (G), confounder (U), and error (eX). 
 #' @param BGX1 true effect of the variant on X in stratum 1.
 #' @param BGX2 true effect of the variant on X in stratum 2.
 #' @param BUX confounder effect on X (assumed to be the same in both strata).
 #' @return A numeric vector containing the exposure for all N individuals.  
-#' @examples 
-#' \dontrun{
-#' if(interactive()){
-#'  hist(simulate_exposure(indiv_data, c("K", "G", "U", "eX"), 0.4, 0.39, 1))
-#'  }
-#' }
 #' @rdname simulate_exposure
 #' @export
 
