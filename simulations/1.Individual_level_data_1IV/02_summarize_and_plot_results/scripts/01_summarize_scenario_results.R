@@ -3,9 +3,7 @@ library(tidyr)
 library(dplyr)
 library(sessioninfo)
 
-## Initialize
 rm(list = ls())
-set.seed(09222025)
 
 # ------------------------------------------------------------------------------
 #                  2.0 Summarize and plot results per scenario 
@@ -29,7 +27,8 @@ input_dir00 <- paste(getwd(), "simulations", "1.Individual_level_data_1IV", "00_
 
 
 ## Args 
-scenario_args <- c(main = "scenario.00", sub_sce_varying_par = "N")
+# scenario_args <- c(main = "scenario.00", sub_sce_varying_par = "N")
+scenario_args <- c(main = "scenario.00", sub_sce_varying_par = "r")
 
 ## Scenario input dir
 input_dir_sce <- paste(getwd(), "simulations", "1.Individual_level_data_1IV", "01_run_replicates_x_scenario", "outputs", 

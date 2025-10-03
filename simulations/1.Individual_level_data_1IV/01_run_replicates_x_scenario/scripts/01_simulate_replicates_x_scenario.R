@@ -7,7 +7,6 @@ library(pheatmap)
 library(dichromat)
 library(sessioninfo)
 
-## Initialize
 rm(list = ls())
 set.seed(09222025)
 
