@@ -78,6 +78,17 @@ for (r in rs){
   scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0(sub_sce_varying_par, "=", r), 
                                   N_base, "r" = r, q1_base, q2_base, BGX1_base, diff_BGX, BXY1_base, diff_BXY, BUX_base, BUY_base)) 
 }
+
+scenarios00[, 4:13] <- apply(scenarios00[, 4:13] , 2, as.numeric)
+save(scenarios00, file = paste0(out_dir, "/scenario.00.Rdata"))
+
+
+
+
+
+
+
+
 # _HEREEEEEE_____________________________________________________________________________________________
 #  3. Varying q₁ and q₂: N = 50k, r = 1, q₁ = q₂ = {0.05, ..., 0.45}, βɢx₁ = 0.5, βxʏ₁ = 0.7
 # ______________________________________________________________________________________________
