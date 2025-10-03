@@ -5,12 +5,6 @@
 #' @param n_Aa observed number of heterozygote individuals 
 #' @param n_AA observed number of heterozygote individuals for major allele "A"
 #' @return A vector with computed $\chi^2$ test statistic and its p-value for 1 degree of freedom.
-#' @examples 
-#' \dontrun{
-#' if(interactive()){
-#'  HWE_test(625, 3750, 5625)
-#'  }
-#' }
 #' @rdname HWE_test
 #' @export 
 #' 
