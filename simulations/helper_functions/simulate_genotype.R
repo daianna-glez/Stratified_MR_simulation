@@ -5,12 +5,6 @@
 #' @param q Frequency for the minor allele of the SNP.
 #' @param centered Should the minor allele dosages be centered to 0 or not? Defaults to F.
 #' @return A numeric vector containing the minor allele dosages for all N individuals.  
-#' @examples 
-#' \dontrun{
-#' if(interactive()){
-#'  table(simulate_genotype(100, 0.25))
-#'  }
-#' }
 #' @rdname simulate_genotype
 #' @export
 
@@ -18,7 +12,7 @@
 simulate_genotype = function(N, q, centered = F){
   
   ## Confirm q corresponds to minor allele
-  if (!(q <= 0.5)) stop("MAF cannot be >0.5. Consider switching the minor allele.")
+  if (q > 0.5) stop("MAF cannot be >0.5. Consider switching the minor allele.")
   
   G = rbinom(n = N, 
              size = 2, 
