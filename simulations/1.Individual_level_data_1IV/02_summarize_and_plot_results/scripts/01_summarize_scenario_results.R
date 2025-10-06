@@ -28,7 +28,8 @@ input_dir00 <- paste(getwd(), "simulations", "1.Individual_level_data_1IV", "00_
 
 ## Args 
 # scenario_args <- c(main = "scenario.00", sub_sce_varying_par = "N")
-scenario_args <- c(main = "scenario.00", sub_sce_varying_par = "r")
+# scenario_args <- c(main = "scenario.00", sub_sce_varying_par = "r")
+scenario_args <- c(main = "scenario.00", sub_sce_varying_par = "q1_q2")
 
 ## Scenario input dir
 input_dir_sce <- paste(getwd(), "simulations", "1.Individual_level_data_1IV", "01_run_replicates_x_scenario", "outputs", 
@@ -181,6 +182,9 @@ if(scenario_args["sub_sce_varying_par"] %in% c("N", "r", "BGX1", "BXY1")){
   all_res$x <- stringr::str_split_i(all_res$sub_sce_varying_par_value, "=", 2) 
   all_res$x <- factor(all_res$x, levels = unique(all_res$x))
   all_metrics$x <- stringr::str_split_i(all_metrics$subscenario, "=", 2) 
+  
+}
+if(scenario_args["sub_sce_varying_par"] == "q1_q2"){
   
 }
 
