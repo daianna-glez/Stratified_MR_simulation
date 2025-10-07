@@ -4,6 +4,21 @@
 ##           Run 01_simulate_replicates_x_scenario across scenarios
 # ------------------------------------------------------------------------------
 
+## SLURM script for BSU icelake jobs:
+
+##  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+## Section 1: SLURM Commands 
+##  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#SBATCH --job-name=sim_array         # Job name
+#SBATCH --array=1-3                # Job array
+#SBATCH --output=logs/%x_%A_%a.out   # Standard output log (%x=job name, %A=job ID, %a=array task ID)
+#SBATCH --error=logs/%x_%A_%a.err    # Error log
+#SBATCH --time=15:00:00              # Time limit (hh:mm:ss)
+#SBATCH --cpus-per-task=50           # Number of CPUs
+#SBATCH -A mrc-bsu-sl2-cpu           # Project account name (mrc-bsu-sl2-cpu for icelake and mrc-bsu-sl2-gpu for ampere)
+#SBATCH -p icelake                   # The partition. Use icelake for normal jobs, or icelake-himem if needed
+#SBATCH --partition=standard         # Cluster partition or queue (depends on your system)
+
 ##  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ## Section 2: Modules
 ##  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

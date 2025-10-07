@@ -1,3 +1,4 @@
+#!/usr/bin/env Rscript
 
 library(tidyr)
 library(dplyr)
@@ -21,6 +22,7 @@ set.seed(09222025)
 # ______________________________________________________________________________
 
 ## Define dirs
+setwd("/localhome/daianna/Stratified_MR_simulation")
 input_dir <- paste(getwd(), "simulations", "1.Individual_level_data_1IV", "01_run_replicates_x_scenario", "inputs", sep = "/")
 out_dir <- paste(getwd(), "simulations", "1.Individual_level_data_1IV", "01_run_replicates_x_scenario", "outputs", sep = "/")
 plot_dir <- paste(getwd(), "simulations", "1.Individual_level_data_1IV", "01_run_replicates_x_scenario", "plots", sep = "/")
@@ -271,7 +273,8 @@ cor_pheno_predictors <- function(indiv_data, plot_dir_sc_replicate){
 ##########    Main simulation function    ##########
 
 ## Parameter definition:
-#' @param scenario string for main scenario name (one of 00, 01, 10, 11).
+#' @param main_scenario string for main scenario name (one of 00, 01, 10, 11).
+#' @param main_scenario_val value for varying main parameter (diff_BGX and/or diff_BXY)
 #' @param sub_sce_sub_sce_varying_par string for sub scenario 1 name, according to varying parameter(s).
 #' @param sub_sce_varying_par_value string for sub scenario 2 name, according to the value(s) the varying parameter(s) take. 
 #' @param N int for total sample size.
@@ -286,14 +289,14 @@ cor_pheno_predictors <- function(indiv_data, plot_dir_sc_replicate){
 #' @param BUY int for effect of confounder on Y (assumed to be the same across strata).
 #' @param replicate int for replicate number.
 
-simulation_indiv_data_1IV <- function(scenario, sub_sce_varying_par, sub_sce_varying_par_value, N, r, q1, q2, BGX1, diff_BGX, BXY1, diff_BXY, BUX, BUY, replicate){
+simulation_indiv_data_1IV <- function(main_scenario, main_scenario_val, sub_sce_varying_par, sub_sce_varying_par_value, N, r, q1, q2, BGX1, diff_BGX, BXY1, diff_BXY, BUX, BUY, replicate){
   
-  ## Output subdirs x scenario x replicate
-  out_dir_sc <- paste(out_dir, scenario, sub_sce_varying_par, sub_sce_varying_par_value, sep = "/")
+  ## Output subdirs x main_scenario x replicate
+  out_dir_sc <- paste(out_dir, main_scenario, main_scenario_val, sub_sce_varying_par, sub_sce_varying_par_value, sep = "/")
   dir.create(out_dir_sc, recursive = T, showWarnings = F)
   
   ## df to save results (and inputs)
-  out <- data.frame("scenario" = scenario, "sub_sce_varying_par" = sub_sce_varying_par, "sub_sce_varying_par_value" = sub_sce_varying_par_value, 
+  out <- data.frame("main_scenario" = main_scenario, "main_scenario_val" = main_scenario_val, "sub_sce_varying_par" = sub_sce_varying_par, "sub_sce_varying_par_value" = sub_sce_varying_par_value, 
                     "replicate" = replicate, "N" = N, "r" = r, "q1" = q1, "q2" = q2, 
                     "BGX1" = BGX1, "diff_BGX" = diff_BGX, "BXY1" = BXY1, "diff_BXY" = diff_BXY, "BUX" = BUX, "BUY" = BUY)
   
@@ -580,16 +583,16 @@ simulation_indiv_data_1IV <- function(scenario, sub_sce_varying_par, sub_sce_var
   
   if(replicate == 1){
     
-    plot_dir_sc_replicate <- paste(plot_dir, scenario, sub_sce_varying_par, sub_sce_varying_par_value, replicate, sep = "/")
+    plot_dir_sc_replicate <- paste(plot_dir, main_scenario, main_scenario_val, sub_sce_varying_par, sub_sce_varying_par_value, replicate, sep = "/")
     dir.create(plot_dir_sc_replicate, recursive = T, showWarnings = F)
     
     # Plot: X ~ G, U, εx
     #       X̂ ~ G, U, εx
     #       Y ~ X, X̂, G, U, εx, εʏ
     #       Ŷ ~ X, X̂, G, U, εx, εʏ
-    # plot_pheno_vs_predictors(indiv_data, out, plot_dir_sc_replicate)
+    plot_pheno_vs_predictors(indiv_data, out, plot_dir_sc_replicate)
     # Plot correlation between exposure/outcome and predictors
-    # cor_pheno_predictors(indiv_data, plot_dir_sc_replicate)
+    cor_pheno_predictors(indiv_data, plot_dir_sc_replicate)
   }
   
   # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -602,40 +605,60 @@ simulation_indiv_data_1IV <- function(scenario, sub_sce_varying_par, sub_sce_var
 
 
 
-## Run 100 replicates x scenario
-n_rep = 100
-
 ## All 00 scenarios
 load(paste0(input_dir00, "/scenario.00.Rdata"), verbose = T)
 
-for (s in 1:70){
-  sim_args = scenarios00[s, ]
-  
-  scenario_res = vector()
-  for(i in 1:n_rep){
-    scenario_res = rbind(scenario_res, do.call(simulation_indiv_data_1IV, c(sim_args, i)))
-  }
-  
-  ## Save scenario results across replicates
-  save(scenario_res, file = paste0(out_dir, "/", sim_args[1], "/", sim_args[2], "/", sim_args[3], "/scenario_res_across_", n_rep, "replicates.Rdata"))
-  
+## 100 replicates x scenario
+n_rep = 100
+
+## Run for task ID (= scenario ID)
+id <- commandArgs(trailingOnly = TRUE)
+sim_args <- scenarios00[id, ]
+
+scenario_res = vector()
+for(i in 1:n_rep){
+   scenario_res = rbind(scenario_res, do.call(simulation_indiv_data_1IV, c(sim_args, i)))
 }
 
+## Save scenario results across replicates
+save(scenario_res, file = paste0(out_dir, "/", sim_args[1], "/", sim_args[2], "/", sim_args[3],  "/", sim_args[4], "/scenario_res_across_", n_rep, "replicates.Rdata"))
 
-N = sim_args["N"] %>% as.numeric()
-r = sim_args["r"] %>% as.numeric()
-q1 = sim_args["q1"] %>% as.numeric()
-q2 = sim_args["q2"] %>% as.numeric()
-BGX1 = sim_args["BGX1"] %>% as.numeric()
-diff_BGX = sim_args["diff_BGX"] %>% as.numeric()
-BXY1 = sim_args["BXY1"] %>% as.numeric()
-diff_BXY = sim_args["diff_BXY"] %>% as.numeric()
-BUX = sim_args["BUX"] %>% as.numeric()
-BUY = sim_args["BUY"] %>% as.numeric()
 
-scenario = sim_args["scenario"]
-sub_sce_varying_par = sim_args["sub_sce_varying_par"]
-sub_sce_varying_par_value = sim_args["sub_sce_varying_par_value"]
+
+
+
+
+## Read scenario args
+
+# for (s in 1:70){
+#   sim_args = scenarios00[s, ]
+#   
+#   scenario_res = vector()
+#   for(i in 1:n_rep){
+#     scenario_res = rbind(scenario_res, do.call(simulation_indiv_data_1IV, c(sim_args, i)))
+#   }
+#   
+#   ## Save scenario results across replicates
+#   save(scenario_res, file = paste0(out_dir, "/", sim_args[1], "/", sim_args[2], "/", sim_args[3], "/scenario_res_across_", n_rep, "replicates.Rdata"))
+#   
+# }
+
+
+# N = sim_args["N"] %>% as.numeric()
+# r = sim_args["r"] %>% as.numeric()
+# q1 = sim_args["q1"] %>% as.numeric()
+# q2 = sim_args["q2"] %>% as.numeric()
+# BGX1 = sim_args["BGX1"] %>% as.numeric()
+# diff_BGX = sim_args["diff_BGX"] %>% as.numeric()
+# BXY1 = sim_args["BXY1"] %>% as.numeric()
+# diff_BXY = sim_args["diff_BXY"] %>% as.numeric()
+# BUX = sim_args["BUX"] %>% as.numeric()
+# BUY = sim_args["BUY"] %>% as.numeric()
+# 
+# main_scenario = sim_args["main_scenario"]
+# main_scenario_val = sim_args["main_scenario_val"]
+# sub_sce_varying_par = sim_args["sub_sce_varying_par"]
+# sub_sce_varying_par_value = sim_args["sub_sce_varying_par_value"]
 
 
 
@@ -644,7 +667,7 @@ sub_sce_varying_par_value = sim_args["sub_sce_varying_par_value"]
 
 
 ## Reproducibility info
-session_info()
+# session_info()
 
 # ─ Session info ─────────────────────────────────────────────────────────────────────────────────────
 # setting  value

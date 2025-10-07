@@ -43,6 +43,7 @@ scenarios01$scenario <- "scenario.01"
 
 scenarios01[, 5:14] <- apply(scenarios01[, 5:14] , 2, as.numeric)
 save(scenarios01, file = paste0(out_dir, "/scenario.01.Rdata"))
+write.table(scenarios01, file = paste0(out_dir, "/scenario.01.csv"), col.names = F, row.names = F, quote = F, na = "", sep = "\t")
 
 
 

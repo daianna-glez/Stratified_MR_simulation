@@ -62,7 +62,7 @@ Ns <- seq(from = 10, to = 100, by = 10)*1000
 # N = {10,000  20,000  30,000  40,000  50,000  60,000  70,000  80,000  90,000  100,000}
 
 for (N in Ns){
-  scenarios00 <- rbind(scenarios00, c("scenario" = main_scenario, "main_scenario_val" = main_scenario_val, 
+  scenarios00 <- rbind(scenarios00, c("main_scenario" = main_scenario, "main_scenario_val" = main_scenario_val, 
                                       "sub_sce_varying_par" = sub_sce_varying_par, "sub_sce_varying_par_value" = paste0(sub_sce_varying_par,"=", N), 
                                   "N" = N, "r" = r_base, "q1" = q1_base, "q2" = q2_base, 
                                   "BGX1" = BGX1_base, "diff_BGX" = diff_BGX, "BXY1" = BXY1_base, "diff_BXY" = diff_BXY, 
@@ -285,9 +285,9 @@ for (BGX1 in BGX1s_2){
 
 
 scenarios00[, 5:14] <- apply(scenarios00[, 5:14] , 2, as.numeric)
+write.table(scenarios00, file = paste0(out_dir, "/scenario.00.csv"), col.names = F, row.names = F, quote = F, na = "NA", sep = "\t")
+scenarios00$main_scenario_val <- ""
 save(scenarios00, file = paste0(out_dir, "/scenario.00.Rdata"))
-
-
 
 
 
