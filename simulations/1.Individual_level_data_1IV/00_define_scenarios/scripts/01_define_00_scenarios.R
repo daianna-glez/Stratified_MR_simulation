@@ -48,6 +48,7 @@ BUX_base = BUY_base = 1
 
 scenarios00 <- vector()
 main_scenario =  "scenario.00"
+main_scenario_val = ""
 diff_BGX = 0
 diff_BXY = 0
 
@@ -61,7 +62,8 @@ Ns <- seq(from = 10, to = 100, by = 10)*1000
 # N = {10,000  20,000  30,000  40,000  50,000  60,000  70,000  80,000  90,000  100,000}
 
 for (N in Ns){
-  scenarios00 <- rbind(scenarios00, c("scenario" = main_scenario, "sub_sce_varying_par" = sub_sce_varying_par, "sub_sce_varying_par_value" = paste0(sub_sce_varying_par,"=", N), 
+  scenarios00 <- rbind(scenarios00, c("scenario" = main_scenario, "main_scenario_val" = main_scenario_val, 
+                                      "sub_sce_varying_par" = sub_sce_varying_par, "sub_sce_varying_par_value" = paste0(sub_sce_varying_par,"=", N), 
                                   "N" = N, "r" = r_base, "q1" = q1_base, "q2" = q2_base, 
                                   "BGX1" = BGX1_base, "diff_BGX" = diff_BGX, "BXY1" = BXY1_base, "diff_BXY" = diff_BXY, 
                                   "BUX" = BUX_base, "BUY" = BUY_base)) %>% as.data.frame()
@@ -75,7 +77,7 @@ rs <- signif(c(rev(1/(1:5)), 2:5), digits = 2)
 # r = {0.20  0.25  0.33  0.50  1.0  2.0  3.0  4.0  5.0}
 
 for (r in rs){
-  scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0(sub_sce_varying_par, "=", r), 
+  scenarios00 <- rbind(scenarios00, c(main_scenario, main_scenario_val, sub_sce_varying_par, paste0(sub_sce_varying_par, "=", r), 
                                   N_base, "r" = r, q1_base, q2_base, BGX1_base, diff_BGX, BXY1_base, diff_BXY, BUX_base, BUY_base)) 
 }
 
@@ -88,7 +90,7 @@ q1s <- q2s <- seq(from = 0.05, to = 0.5, by = 0.1)
 
 for (q1 in q1s){
   for (q2 in q2s){
-    scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0("q1=", q1, ",q2=", q2), 
+    scenarios00 <- rbind(scenarios00, c(main_scenario, main_scenario_val, sub_sce_varying_par, paste0("q1=", q1, ",q2=", q2), 
                                     N_base, r_base, "q1" = q1, "q2" = q2, BGX1_base, diff_BGX, BXY1_base, diff_BXY, BUX_base, BUY_base)) 
   }
 }
@@ -101,7 +103,7 @@ BGX1s <- seq(from = 0.09, to = 1.46, by = 0.16)
 # βɢx₁ = {0.09  0.25  0.41  0.57  0.73  0.89  1.05  1.21  1.37}
 
 for (BGX1 in BGX1s){
-  scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0(sub_sce_varying_par, "=", BGX1), 
+  scenarios00 <- rbind(scenarios00, c(main_scenario, main_scenario_val, sub_sce_varying_par, paste0(sub_sce_varying_par, "=", BGX1), 
                                   N_base, r_base, q1_base, q2_base, "BGX1" = BGX1, diff_BGX, BXY1_base, diff_BXY, BUX_base, BUY_base)) 
 }
 
@@ -113,7 +115,7 @@ BXY1s <- seq(from = 0.0, to = 1.35, by = 0.15)
 # βxʏ₁ = {0.00  0.15  0.30  0.45  0.60  0.75  0.90  1.05  1.20  1.35}
 
 for (BXY1 in BXY1s){
-  scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0(sub_sce_varying_par, "=", BXY1), 
+  scenarios00 <- rbind(scenarios00, c(main_scenario, main_scenario_val, sub_sce_varying_par, paste0(sub_sce_varying_par, "=", BXY1), 
                                   N_base, r_base, q1_base, q2_base, BGX1_base, diff_BGX, "BXY1" = BXY1, diff_BXY, BUX_base, BUY_base)) 
 }
 
@@ -125,329 +127,332 @@ BUs <- seq(from = 0.0, to = 1.5, by = 0.25)
 # βux = βuʏ = {0.00  0.25  0.50  0.75  1.00. 1.25  1.50}
 
 for (BU in BUs){
-  scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0("BUX=", BU, ",BUY=", BU), 
+  scenarios00 <- rbind(scenarios00, c(main_scenario, main_scenario_val, sub_sce_varying_par, paste0("BUX=", BU, ",BUY=", BU), 
                                       N_base, r_base, q1_base, q2_base, BGX1_base, diff_BGX, BXY1_base, diff_BXY, "BUX" = BU, "BUY" = BU)) 
 }
 
-scenarios00[, 4:13] <- apply(scenarios00[, 4:13] , 2, as.numeric)
-save(scenarios00, file = paste0(out_dir, "/scenario.00.Rdata"))
 
 
+#  Sub-scenarios for two varying parameters at a time:  
 
-#  Sub-scenarios for two varying parameters at a time:  TODOOOOOOOO
 Ns_2 <- seq(from = 10, to = 100, by = 30)*1000 
 # N = {10,000  40,000  70,000  100,000}
 rs_2 <- c(0.2, 0.5, 1, 2, 5)
 # r = {0.20  0.50  1.0  2.0  5.0}
 q1s_2 <- q2s_2 <- c(0.05, 0.25, 0.45)
 # q₁ = q₂ = {0.05  0.25  0.45}
-BGX1s_2 <- seq(from = 0.01, to = 0.8, by = 0.16)
-# βɢx₁ = {0.01  0.17  0.33  0.49  0.65}
+BGX1s_2 <- seq(from = 0.1, to = 1.5, by = 0.3)
+# βɢx₁ = {0.1  0.4  0.7  1.0  1.3}
 BXY1s_2 <- seq(from = 0.0, to = 1.35, by = 0.3)
 # βxʏ₁ = {0.0  0.3  0.6  0.9  1.2}
 
 # ______________________________________________________________________________________________
-#  6. Varying N and r: N = {10k, ..., 100k} r = {0.20, ..., 1, ..., 5},
-#                      q₁ = q₂ = 0.25, βɢx₁ = 0.5, βxʏ₁ = 0.7
+#  7. Varying N and r: N = {10k, ..., 100k} r = {0.20, ..., 1, ..., 5},
+#                      q₁ = q₂ = 0.25, βɢx₁ = 0.5, βxʏ₁ = 0.7, βux = βuʏ = 1
 # ______________________________________________________________________________________________
 sub_sce_varying_par = "N_r"
 for (N in Ns_2){
   for (r in rs_2){
-    scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0("N=", N, ",r=", r), 
-                                    "N" = N, "r" = r, q1_base, q2_base, BGX1_base, diff_BGX, BXY1_base, diff_BXY)) 
+    scenarios00 <- rbind(scenarios00, c(main_scenario, main_scenario_val, sub_sce_varying_par, paste0("N=", N, ",r=", r), 
+                                    "N" = N, "r" = r, q1_base, q2_base, BGX1_base, diff_BGX, BXY1_base, diff_BXY, BUX_base, BUY_base)) 
   }
 }
 
 # ______________________________________________________________________________________________
-#  7. Varying N, q₁ and q₂: N = {10k, ..., 100k}, q₁ = q₂ = {0.05, ..., 0.45}, 
-#                           r = 1, βɢx₁ = 0.5, βxʏ₁ = 0.7
+#  8. Varying N, q₁ and q₂: N = {10k, ..., 100k}, q₁ = q₂ = {0.05, ..., 0.45}, 
+#                           r = 1, βɢx₁ = 0.5, βxʏ₁ = 0.7, βux = βuʏ = 1
 # ______________________________________________________________________________________________
 sub_sce_varying_par = "N_q1_q2"
 
 for (N in Ns_2){
   for (q1 in q1s_2){
     for (q2 in q2s_2){
-      scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0("N=", N, ",q1=", q1, ",q2=", q2), 
-                                      "N" = N, r_base, "q1" = q1, "q2" = q2, BGX1_base, diff_BGX, BXY1_base, diff_BXY)) 
+      scenarios00 <- rbind(scenarios00, c(main_scenario, main_scenario_val, sub_sce_varying_par, paste0("N=", N, ",q1=", q1, ",q2=", q2), 
+                                      "N" = N, r_base, "q1" = q1, "q2" = q2, BGX1_base, diff_BGX, BXY1_base, diff_BXY, BUX_base, BUY_base)) 
     }
   }
 }
 
 # ______________________________________________________________________________________________
-#  8. Varying N and βɢx₁: N = {10k, ..., 100k}, βɢx₁ = {0.01,..., 0.65}, 
-#                         r = 1, q₁ = q₂ = 0.25, βxʏ₁ = 0.7
+#  9. Varying N and βɢx₁: N = {10k, ..., 100k}, βɢx₁ = {0.1,..., 1.3}, 
+#                         r = 1, q₁ = q₂ = 0.25, βxʏ₁ = 0.7, βux = βuʏ = 1
 # ______________________________________________________________________________________________
 sub_sce_varying_par = "N_BGX1"
 
 for (N in Ns_2){
   for (BGX1 in BGX1s_2){
-    scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0("N=", N, ",BGX1=", BGX1), 
-                                    "N" = N, r_base, q1_base, q2_base, "BGX1" = BGX1, diff_BGX, BXY1_base, diff_BXY)) 
+    scenarios00 <- rbind(scenarios00, c(main_scenario, main_scenario_val, sub_sce_varying_par, paste0("N=", N, ",BGX1=", BGX1), 
+                                    "N" = N, r_base, q1_base, q2_base, "BGX1" = BGX1, diff_BGX, BXY1_base, diff_BXY, BUX_base, BUY_base)) 
   }
 }
 
 # ______________________________________________________________________________________________
-#  9. Varying N and βxʏ₁: N = {10k, ..., 100k}, βxʏ₁ = {0.0, ..., 1.2}, 
-#                         r = 1, q₁ = q₂ = 0.25, βɢx₁ = 0.5
+#  10. Varying N and βxʏ₁: N = {10k, ..., 100k}, βxʏ₁ = {0.0, ..., 1.2}, 
+#                          r = 1, q₁ = q₂ = 0.25, βɢx₁ = 0.5, βux = βuʏ = 1
 # ______________________________________________________________________________________________
 sub_sce_varying_par = "N_BXY1"
 
 for (N in Ns_2){
   for (BXY1 in BXY1s_2){
-    scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0("N=", N, ",BXY1=", BXY1), 
-                                    "N" = N, r_base, q1_base, q2_base, BGX1_base, diff_BGX, "BXY1" = BXY1, diff_BXY)) 
+    scenarios00 <- rbind(scenarios00, c(main_scenario, main_scenario_val, sub_sce_varying_par, paste0("N=", N, ",BXY1=", BXY1), 
+                                    "N" = N, r_base, q1_base, q2_base, BGX1_base, diff_BGX, "BXY1" = BXY1, diff_BXY, BUX_base, BUY_base)) 
   }
 }
 
 # ______________________________________________________________________________________________
-#  10. Varying r, q₁ and q₂: r = {0.20, ..., 1, ..., 5}, q₁ = q₂ = {0.05, ..., 0.45},
-#                            N = 50k, βɢx₁ = 0.5, βxʏ₁ = 0.7
+#  11. Varying r, q₁ and q₂: r = {0.20, ..., 1, ..., 5}, q₁ = q₂ = {0.05, ..., 0.45},
+#                            N = 50k, βɢx₁ = 0.5, βxʏ₁ = 0.7, βux = βuʏ = 1
 # ______________________________________________________________________________________________
 sub_sce_varying_par = "r_q1_q2"
 
-for (r in rs){
-  for (q1 in q1s){
-    for (q2 in q2s){
-      scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0("r=", r, ",q1=", q1, ",q2=", q2), 
-                                      N_base, "r" = r, "q1" = q1, "q2" = q2, BGX1_base, diff_BGX, BXY1_base, diff_BXY)) 
+for (r in rs_2){
+  for (q1 in q1s_2){
+    for (q2 in q2s_2){
+      scenarios00 <- rbind(scenarios00, c(main_scenario, main_scenario_val, sub_sce_varying_par, paste0("r=", r, ",q1=", q1, ",q2=", q2), 
+                                      N_base, "r" = r, "q1" = q1, "q2" = q2, BGX1_base, diff_BGX, BXY1_base, diff_BXY, BUX_base, BUY_base)) 
     }
   }
 }
 
 # ______________________________________________________________________________________________
-#  11. Varying r and βɢx₁: r = {0.20, ..., 1, ..., 5}, βɢx₁ = {0.01, 0.09,..., 0.73}, 
-#                          N = 50k, q₁ = q₂ = 0.25, βxʏ₁ = 0.7
+#  12. Varying r and βɢx₁: r = {0.20, ..., 1, ..., 5}, βɢx₁ = {0.1,..., 1.3}, 
+#                          N = 50k, q₁ = q₂ = 0.25, βxʏ₁ = 0.7, βux = βuʏ = 1
 # ______________________________________________________________________________________________
 sub_sce_varying_par = "r_BGX1"
 
-for (r in rs){
-  for (BGX1 in BGX1s){
-    scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0("r=", r, ",BGX1=", BGX1), 
-                                    N_base, "r" = r, q1_base, q2_base, "BGX1" = BGX1, diff_BGX, BXY1_base, diff_BXY)) 
+for (r in rs_2){
+  for (BGX1 in BGX1s_2){
+    scenarios00 <- rbind(scenarios00, c(main_scenario, main_scenario_val, sub_sce_varying_par, paste0("r=", r, ",BGX1=", BGX1), 
+                                    N_base, "r" = r, q1_base, q2_base, "BGX1" = BGX1, diff_BGX, BXY1_base, diff_BXY, BUX_base, BUY_base)) 
   }
 }
 
 # ______________________________________________________________________________________________
-#  12. Varying r and βxʏ₁: r = {0.20, ..., 1, ..., 5}, βxʏ₁ = {0.1, ..., 1.45},  
-#                          N = 50k, q₁ = q₂ = 0.25, βɢx₁ = 0.5
+#  13. Varying r and βxʏ₁: r = {0.20, ..., 1, ..., 5}, βxʏ₁ = {0.0, ..., 1.2},  
+#                          N = 50k, q₁ = q₂ = 0.25, βɢx₁ = 0.5, βux = βuʏ = 1
 # ______________________________________________________________________________________________
 sub_sce_varying_par = "r_BXY1"
 
-for (r in rs){
-  for (BXY1 in BXY1s){
-    scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0("r=", r, ",BXY1=", BXY1), 
-                                    N_base, "r" = r, q1_base, q2_base, BGX1_base, diff_BGX, "BXY1" = BXY1, diff_BXY)) 
+for (r in rs_2){
+  for (BXY1 in BXY1s_2){
+    scenarios00 <- rbind(scenarios00, c(main_scenario, main_scenario_val, sub_sce_varying_par, paste0("r=", r, ",BXY1=", BXY1), 
+                                    N_base, "r" = r, q1_base, q2_base, BGX1_base, diff_BGX, "BXY1" = BXY1, diff_BXY, BUX_base, BUY_base)) 
   }
 }
 
 # ______________________________________________________________________________________________
-#  13. Varying q₁, q₂ and βɢx₁: q₁ = q₂ = {0.05, ..., 0.45}, βɢx₁ = {0.01, 0.09,..., 0.73},  
-#                               N = 50k, r = 1, βxʏ₁ = 0.7
+#  14. Varying q₁, q₂ and βɢx₁: q₁ = q₂ = {0.05, ..., 0.45}, βɢx₁ = {0.1,..., 1.3},  
+#                               N = 50k, r = 1, βxʏ₁ = 0.7, βux = βuʏ = 1
 # ______________________________________________________________________________________________
 sub_sce_varying_par = "q1_q2_BGX1"
 
-for (q1 in q1s){
-  for (q2 in q2s){
-    for(BGX1 in BGX1s){
-      scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0("q1=", q1, ",q2=", q2, ",BGX1=",BGX1), 
-                                      N_base, r_base, "q1" = q1, "q2" = q2, "BGX1" = BGX1, diff_BGX, BXY1_base, diff_BXY)) 
+for (q1 in q1s_2){
+  for (q2 in q2s_2){
+    for(BGX1 in BGX1s_2){
+      scenarios00 <- rbind(scenarios00, c(main_scenario, main_scenario_val, sub_sce_varying_par, paste0("q1=", q1, ",q2=", q2, ",BGX1=",BGX1), 
+                                      N_base, r_base, "q1" = q1, "q2" = q2, "BGX1" = BGX1, diff_BGX, BXY1_base, diff_BXY, BUX_base, BUY_base)) 
     }
   }
 }
 
 # ______________________________________________________________________________________________
-#  14. Varying q₁, q₂ and βxʏ₁: q₁ = q₂ = {0.05, ..., 0.45}, βxʏ₁ = {0.1, ..., 1.45},  
-#                               N = 50k, r = 1, βɢx₁ = 0.5
+#  15. Varying q₁, q₂ and βxʏ₁: q₁ = q₂ = {0.05, ..., 0.45}, βxʏ₁ = {0.0, ..., 1.2},  
+#                               N = 50k, r = 1, βɢx₁ = 0.5, βux = βuʏ = 1
 # ______________________________________________________________________________________________
 sub_sce_varying_par = "q1_q2_BXY1"
 
-for (q1 in q1s){
-  for (q2 in q2s){
-    for(BXY1 in BXY1s){
-      scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0("q1=", q1, ",q2=", q2, ",BXY1=",BXY1), 
-                                      N_base, r_base, "q1" = q1, "q2" = q2, BGX1_base, diff_BGX, "BXY1" = BXY1, diff_BXY)) 
+for (q1 in q1s_2){
+  for (q2 in q2s_2){
+    for(BXY1 in BXY1s_2){
+      scenarios00 <- rbind(scenarios00, c(main_scenario, main_scenario_val, sub_sce_varying_par, paste0("q1=", q1, ",q2=", q2, ",BXY1=",BXY1), 
+                                      N_base, r_base, "q1" = q1, "q2" = q2, BGX1_base, diff_BGX, "BXY1" = BXY1, diff_BXY, BUX_base, BUY_base)) 
     }
   }
 }
 
 # ______________________________________________________________________________________________
-#  15. Varying βɢx₁ and βxʏ₁: βɢx₁ = {0.01, 0.09,..., 0.73}, βxʏ₁ = {0.1, ..., 1.45},  
-#                             N = 50k, r = 1, q₁ = q₂ = 0.25
+#  16. Varying βɢx₁ and βxʏ₁: βɢx₁ = {0.1,..., 1.3}, βxʏ₁ = {0.0, ..., 1.2},  
+#                             N = 50k, r = 1, q₁ = q₂ = 0.25, βux = βuʏ = 1
 # ______________________________________________________________________________________________
 sub_sce_varying_par = "BGX1_BXY1"
 
-for (BGX1 in BGX1s){
-  for(BXY1 in BXY1s){
-    scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0("BGX1=", BGX1, ",BXY1=",BXY1), 
-                                    N_base, r_base, q1_base, q2_base, "BGX1" = BGX1, diff_BGX, "BXY1" = BXY1, diff_BXY)) 
+for (BGX1 in BGX1s_2){
+  for(BXY1 in BXY1s_2){
+    scenarios00 <- rbind(scenarios00, c(main_scenario, main_scenario_val, sub_sce_varying_par, paste0("BGX1=", BGX1, ",BXY1=",BXY1), 
+                                    N_base, r_base, q1_base, q2_base, "BGX1" = BGX1, diff_BGX, "BXY1" = BXY1, diff_BXY, BUX_base, BUY_base)) 
   }
 }
 
-#  Sub-scenarios for three varying parameters at a time: 
-# ______________________________________________________________________________________________
-#  16. Varying N, r, q₁ and q₂: N = {10k, ..., 100k}, r = {0.20, ..., 1, ..., 5}, 
-#                               q₁ = q₂ = {0.05, ..., 0.45}, βɢx₁ = 0.5, βxʏ₁ = 0.7
-# ______________________________________________________________________________________________
-sub_sce_varying_par = "N_r_q1_q2"
 
-for (N in Ns){
-  for (r in rs){
-    for(q1 in q1s){
-      for(q2 in q2s){
-      scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0("N=", N, ",r=", r,",q1=", q1, ",q2=", q2), 
-                                      "N" = N, "r" = r, "q1" = q1, "q2" = q2, BGX1_base, diff_BGX, BXY1_base, diff_BXY)) 
-      }
-    }
-  }
-}
-
-# ______________________________________________________________________________________________
-#  17. Varying N, r, and βɢx₁: N = {10k, ..., 100k}, r = {0.20, ..., 1, ..., 5}, 
-#                              βɢx₁ = {0.01, 0.09,..., 0.73}, q₁ = q₂ = 0.25, βxʏ₁ = 0.7
-# ______________________________________________________________________________________________
-sub_sce_varying_par = "N_r_BGX1"
-
-for (N in Ns){
-  for (r in rs){
-    for(BGX1 in BGX1s){
-      scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0("N=", N, ",r=", r,",BGX1=", BGX1), 
-                                        "N" = N, "r" = r, q1_base, q2_base, "BGX1" = BGX1, diff_BGX, BXY1_base, diff_BXY)) 
-    }
-  }
-}
-
-# ______________________________________________________________________________________________
-#  18. Varying N, r, and βxʏ₁: N = {10k, ..., 100k}, r = {0.20, ..., 1, ..., 5}, 
-#                              βxʏ₁ = {0.1, ..., 1.45}, q₁ = q₂ = 0.25, βɢx₁ = 0.5
-# ______________________________________________________________________________________________
-sub_sce_varying_par = "N_r_BXY1"
-
-for (N in Ns){
-  for (r in rs){
-    for(BXY1 in BXY1s){
-      scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0("N=", N, ",r=", r,",BXY1=", BXY1), 
-                                      "N" = N, "r" = r, q1_base, q2_base, BGX1_base, diff_BGX, "BXY1" = BXY1, diff_BXY)) 
-    }
-  }
-}
-
-# ______________________________________________________________________________________________
-#  19. Varying N, q₁, q₂, and βɢx₁: N = {10k, ..., 100k}, q₁ = q₂ = {0.05, ..., 0.45},
-#                                   βɢx₁ = {0.01, 0.09,..., 0.73}, r = 1, βxʏ₁ = 0.7
-# ______________________________________________________________________________________________
-sub_sce_varying_par = "N_q1_q2_BGX1"
-
-for (N in Ns){
-  for (q1 in q1s){
-    for(q2 in q2s){
-      for(BGX1 in BGX1s){
-        scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0("N=", N, ",q1=", q1,",q2=", q2, ",BGX1=", BGX1), 
-                                        "N" = N, r_base, "q1" = q1, "q2" = q2, "BGX1" = BGX1, diff_BGX, BXY1_base, diff_BXY)) 
-      }
-    }
-  }
-}
-
-# ______________________________________________________________________________________________
-#  20. Varying N, q₁, q₂, and βxʏ₁: N = {10k, ..., 100k}, q₁ = q₂ = {0.05, ..., 0.45},
-#                                   βxʏ₁ = {0.1, ..., 1.45}, r = 1, βɢx₁ = 0.5
-# ______________________________________________________________________________________________
-sub_sce_varying_par = "N_q1_q2_BXY1"
-
-for (N in Ns){
-  for (q1 in q1s){
-    for(q2 in q2s){
-      for(BXY1 in BXY1s){
-        scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0("N=", N, ",q1=", q1,",q2=", q2, ",BXY1=", BXY1), 
-                                        "N" = N, r_base, "q1" = q1, "q2" = q2, BGX1_base, diff_BGX, "BXY1" = BXY1, diff_BXY)) 
-      }
-    }
-  }
-}
-
-# ______________________________________________________________________________________________
-#  21. Varying N, βɢx₁, and βxʏ₁: N = {10k, ..., 100k}, βɢx₁ = {0.01, 0.09,..., 0.73}
-#                                 βxʏ₁ = {0.1, ..., 1.45}, r = 1, q₁ = q₂ = 0.25
-# ______________________________________________________________________________________________
-sub_sce_varying_par = "N_BGX1_BXY1"
-
-for (N in Ns){
-  for (BGX1 in BGX1s){
-    for(BXY1 in BXY1s){
-      scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0("N=", N, ",BGX1=", BGX1,",BXY1=", BXY1), 
-                                        "N" = N, r_base, q1_base, q2_base, "BGX1" = BGX1, diff_BGX, "BXY1" = BXY1, diff_BXY)) 
-    }
-  }
-}
-
-# ______________________________________________________________________________________________
-#  22. Varying r, q₁ and q₂, and βɢx₁: r = {0.20, ..., 1, ..., 5}, q₁ = q₂ = {0.05, ..., 0.45},
-#                                      βɢx₁ = {0.01, 0.09,..., 0.73}, N = 50k, βxʏ₁ = 0.7
-# ______________________________________________________________________________________________
-sub_sce_varying_par = "r_q1_q2_BGX1"
-
-for (r in rs){
-  for (q1 in q1s){
-    for(q2 in q2s){
-      for(BGX1 in BGX1s){
-        scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0("r=", r, ",q1=", q1,",q2=", q2, ",BGX1=", BGX1), 
-                                          N_base, "r" = r, "q1" = q1, "q2" = q2, "BGX1" = BGX1, diff_BGX, BXY1_base, diff_BXY)) 
-      }
-    }
-  }
-}
-
-# ______________________________________________________________________________________________
-#  23. Varying r, q₁ and q₂, and βxʏ₁: r = {0.20, ..., 1, ..., 5}, q₁ = q₂ = {0.05, ..., 0.45},
-#                                      βxʏ₁ = {0.1, ..., 1.45}, N = 50k, βɢx₁ = 0.5
-# ______________________________________________________________________________________________
-sub_sce_varying_par = "r_q1_q2_BXY1"
-
-for (r in rs){
-  for (q1 in q1s){
-    for(q2 in q2s){
-      for(BXY1 in BXY1s){
-        scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0("r=", r, ",q1=", q1,",q2=", q2, ",BXY1=", BXY1), 
-                                        N_base, "r" = r, "q1" = q1, "q2" = q2, BGX1_base, diff_BGX, "BXY1" = BXY1, diff_BXY)) 
-      }
-    }
-  }
-}
-
-# ______________________________________________________________________________________________
-#  24. Varying r, βɢx₁, and βxʏ₁: r = {0.20, ..., 1, ..., 5}, βɢx₁ = {0.01, 0.09,..., 0.73},
-#                                 βxʏ₁ = {0.1, ..., 1.45}, N = 50k, q₁ = q₂ = 0.25
-# ______________________________________________________________________________________________
-sub_sce_varying_par = "r_BGX1_BXY1"
-
-for (r in rs){
-  for (BGX1 in BGX1s){
-    for(BXY1 in BXY1s){
-      scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0("r=", r, ",BGX1=", BGX1,",BXY1=", BXY1), 
-                                      N_base, "r" = r, q1_base, q2_base, "BGX1" = BGX1, diff_BGX, "BXY1" = BXY1, diff_BXY)) 
-    }
-  }
-}
-
-# ___________________________________________________________________________________________________
-#  25. Varying q₁ and q₂, βɢx₁, and βxʏ₁: q₁ = q₂ = {0.05, ..., 0.45}, βɢx₁ = {0.01, 0.09,..., 0.73},
-#                                         βxʏ₁ = {0.1, ..., 1.45}, N = 50k, r = 1
-# ___________________________________________________________________________________________________
-sub_sce_varying_par = "q1_q2_BGX1_BXY1"
-
-for (q1 in q1s){
-  for (q2 in q2s){
-    for(BGX1 in BGX1s){
-      for(BXY1 in BXY1s){
-        scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0("q1=", q1, ",q2=", q2,",BGX1=", BGX1, ",BXY1=", BXY1), 
-                                        N_base, r_base, "q1" = q1, "q2" = q2, "BGX1" = BGX1, diff_BGX, "BXY1" = BXY1, diff_BXY)) 
-      }
-    }
-  }
-}
-
-scenarios00[, 4:11] <- apply(scenarios00[, 4:11] , 2, as.numeric)
+scenarios00[, 5:14] <- apply(scenarios00[, 5:14] , 2, as.numeric)
 save(scenarios00, file = paste0(out_dir, "/scenario.00.Rdata"))
+
+
+
+
+
+# #  Sub-scenarios for three varying parameters at a time: TODO?
+# # ______________________________________________________________________________________________
+# #  16. Varying N, r, q₁ and q₂: N = {10k, ..., 100k}, r = {0.20, ..., 1, ..., 5}, 
+# #                               q₁ = q₂ = {0.05, ..., 0.45}, βɢx₁ = 0.5, βxʏ₁ = 0.7
+# # ______________________________________________________________________________________________
+# sub_sce_varying_par = "N_r_q1_q2"
+# 
+# for (N in Ns){
+#   for (r in rs){
+#     for(q1 in q1s){
+#       for(q2 in q2s){
+#       scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0("N=", N, ",r=", r,",q1=", q1, ",q2=", q2), 
+#                                       "N" = N, "r" = r, "q1" = q1, "q2" = q2, BGX1_base, diff_BGX, BXY1_base, diff_BXY)) 
+#       }
+#     }
+#   }
+# }
+# 
+# # ______________________________________________________________________________________________
+# #  17. Varying N, r, and βɢx₁: N = {10k, ..., 100k}, r = {0.20, ..., 1, ..., 5}, 
+# #                              βɢx₁ = {0.01, 0.09,..., 0.73}, q₁ = q₂ = 0.25, βxʏ₁ = 0.7
+# # ______________________________________________________________________________________________
+# sub_sce_varying_par = "N_r_BGX1"
+# 
+# for (N in Ns){
+#   for (r in rs){
+#     for(BGX1 in BGX1s){
+#       scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0("N=", N, ",r=", r,",BGX1=", BGX1), 
+#                                         "N" = N, "r" = r, q1_base, q2_base, "BGX1" = BGX1, diff_BGX, BXY1_base, diff_BXY)) 
+#     }
+#   }
+# }
+# 
+# # ______________________________________________________________________________________________
+# #  18. Varying N, r, and βxʏ₁: N = {10k, ..., 100k}, r = {0.20, ..., 1, ..., 5}, 
+# #                              βxʏ₁ = {0.1, ..., 1.45}, q₁ = q₂ = 0.25, βɢx₁ = 0.5
+# # ______________________________________________________________________________________________
+# sub_sce_varying_par = "N_r_BXY1"
+# 
+# for (N in Ns){
+#   for (r in rs){
+#     for(BXY1 in BXY1s){
+#       scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0("N=", N, ",r=", r,",BXY1=", BXY1), 
+#                                       "N" = N, "r" = r, q1_base, q2_base, BGX1_base, diff_BGX, "BXY1" = BXY1, diff_BXY)) 
+#     }
+#   }
+# }
+# 
+# # ______________________________________________________________________________________________
+# #  19. Varying N, q₁, q₂, and βɢx₁: N = {10k, ..., 100k}, q₁ = q₂ = {0.05, ..., 0.45},
+# #                                   βɢx₁ = {0.01, 0.09,..., 0.73}, r = 1, βxʏ₁ = 0.7
+# # ______________________________________________________________________________________________
+# sub_sce_varying_par = "N_q1_q2_BGX1"
+# 
+# for (N in Ns){
+#   for (q1 in q1s){
+#     for(q2 in q2s){
+#       for(BGX1 in BGX1s){
+#         scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0("N=", N, ",q1=", q1,",q2=", q2, ",BGX1=", BGX1), 
+#                                         "N" = N, r_base, "q1" = q1, "q2" = q2, "BGX1" = BGX1, diff_BGX, BXY1_base, diff_BXY)) 
+#       }
+#     }
+#   }
+# }
+# 
+# # ______________________________________________________________________________________________
+# #  20. Varying N, q₁, q₂, and βxʏ₁: N = {10k, ..., 100k}, q₁ = q₂ = {0.05, ..., 0.45},
+# #                                   βxʏ₁ = {0.1, ..., 1.45}, r = 1, βɢx₁ = 0.5
+# # ______________________________________________________________________________________________
+# sub_sce_varying_par = "N_q1_q2_BXY1"
+# 
+# for (N in Ns){
+#   for (q1 in q1s){
+#     for(q2 in q2s){
+#       for(BXY1 in BXY1s){
+#         scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0("N=", N, ",q1=", q1,",q2=", q2, ",BXY1=", BXY1), 
+#                                         "N" = N, r_base, "q1" = q1, "q2" = q2, BGX1_base, diff_BGX, "BXY1" = BXY1, diff_BXY)) 
+#       }
+#     }
+#   }
+# }
+# 
+# # ______________________________________________________________________________________________
+# #  21. Varying N, βɢx₁, and βxʏ₁: N = {10k, ..., 100k}, βɢx₁ = {0.01, 0.09,..., 0.73}
+# #                                 βxʏ₁ = {0.1, ..., 1.45}, r = 1, q₁ = q₂ = 0.25
+# # ______________________________________________________________________________________________
+# sub_sce_varying_par = "N_BGX1_BXY1"
+# 
+# for (N in Ns){
+#   for (BGX1 in BGX1s){
+#     for(BXY1 in BXY1s){
+#       scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0("N=", N, ",BGX1=", BGX1,",BXY1=", BXY1), 
+#                                         "N" = N, r_base, q1_base, q2_base, "BGX1" = BGX1, diff_BGX, "BXY1" = BXY1, diff_BXY)) 
+#     }
+#   }
+# }
+# 
+# # ______________________________________________________________________________________________
+# #  22. Varying r, q₁ and q₂, and βɢx₁: r = {0.20, ..., 1, ..., 5}, q₁ = q₂ = {0.05, ..., 0.45},
+# #                                      βɢx₁ = {0.01, 0.09,..., 0.73}, N = 50k, βxʏ₁ = 0.7
+# # ______________________________________________________________________________________________
+# sub_sce_varying_par = "r_q1_q2_BGX1"
+# 
+# for (r in rs){
+#   for (q1 in q1s){
+#     for(q2 in q2s){
+#       for(BGX1 in BGX1s){
+#         scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0("r=", r, ",q1=", q1,",q2=", q2, ",BGX1=", BGX1), 
+#                                           N_base, "r" = r, "q1" = q1, "q2" = q2, "BGX1" = BGX1, diff_BGX, BXY1_base, diff_BXY)) 
+#       }
+#     }
+#   }
+# }
+# 
+# # ______________________________________________________________________________________________
+# #  23. Varying r, q₁ and q₂, and βxʏ₁: r = {0.20, ..., 1, ..., 5}, q₁ = q₂ = {0.05, ..., 0.45},
+# #                                      βxʏ₁ = {0.1, ..., 1.45}, N = 50k, βɢx₁ = 0.5
+# # ______________________________________________________________________________________________
+# sub_sce_varying_par = "r_q1_q2_BXY1"
+# 
+# for (r in rs){
+#   for (q1 in q1s){
+#     for(q2 in q2s){
+#       for(BXY1 in BXY1s){
+#         scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0("r=", r, ",q1=", q1,",q2=", q2, ",BXY1=", BXY1), 
+#                                         N_base, "r" = r, "q1" = q1, "q2" = q2, BGX1_base, diff_BGX, "BXY1" = BXY1, diff_BXY)) 
+#       }
+#     }
+#   }
+# }
+# 
+# # ______________________________________________________________________________________________
+# #  24. Varying r, βɢx₁, and βxʏ₁: r = {0.20, ..., 1, ..., 5}, βɢx₁ = {0.01, 0.09,..., 0.73},
+# #                                 βxʏ₁ = {0.1, ..., 1.45}, N = 50k, q₁ = q₂ = 0.25
+# # ______________________________________________________________________________________________
+# sub_sce_varying_par = "r_BGX1_BXY1"
+# 
+# for (r in rs){
+#   for (BGX1 in BGX1s){
+#     for(BXY1 in BXY1s){
+#       scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0("r=", r, ",BGX1=", BGX1,",BXY1=", BXY1), 
+#                                       N_base, "r" = r, q1_base, q2_base, "BGX1" = BGX1, diff_BGX, "BXY1" = BXY1, diff_BXY)) 
+#     }
+#   }
+# }
+# 
+# # ___________________________________________________________________________________________________
+# #  25. Varying q₁ and q₂, βɢx₁, and βxʏ₁: q₁ = q₂ = {0.05, ..., 0.45}, βɢx₁ = {0.01, 0.09,..., 0.73},
+# #                                         βxʏ₁ = {0.1, ..., 1.45}, N = 50k, r = 1
+# # ___________________________________________________________________________________________________
+# sub_sce_varying_par = "q1_q2_BGX1_BXY1"
+# 
+# for (q1 in q1s){
+#   for (q2 in q2s){
+#     for(BGX1 in BGX1s){
+#       for(BXY1 in BXY1s){
+#         scenarios00 <- rbind(scenarios00, c(main_scenario, sub_sce_varying_par, paste0("q1=", q1, ",q2=", q2,",BGX1=", BGX1, ",BXY1=", BXY1), 
+#                                         N_base, r_base, "q1" = q1, "q2" = q2, "BGX1" = BGX1, diff_BGX, "BXY1" = BXY1, diff_BXY)) 
+#       }
+#     }
+#   }
+# }
 
 
 
