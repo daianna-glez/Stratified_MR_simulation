@@ -11,7 +11,7 @@ rm(list = ls())
 set.seed(09222025)
 
 # ------------------------------------------------------------------------------
-#                 1.0 Run simulation replicates per scenario 
+#                   1. Run simulation replicates per scenario 
 # ------------------------------------------------------------------------------
 #  This script takes a scenario parameters and simulates it n_rep times: 
 #  it simulates genotype (G) for 1 IV, an unknown confounder (U), exposure (X), 
@@ -110,7 +110,7 @@ plot_pheno_vs_predictor <- function(indiv_data, pheno, predictor, out){
     
     if(pheno == "X"){
       slope = out$BUX
-      label = paste("beta[UX] == 1")
+      label = paste("beta[UX] == ", out$BUX)
     }
     else if(pheno == "pred_X"){
       slope = 0
@@ -118,7 +118,7 @@ plot_pheno_vs_predictor <- function(indiv_data, pheno, predictor, out){
     }
     else if(pheno == "Y"){
       slope = out$BUY
-      label = paste("beta[UY] == 1")
+      label = paste("beta[UY] == ", out$BUY)
     }
     else if(pheno == "pred_Y"){
       slope = 0
@@ -451,7 +451,7 @@ simulation_indiv_data_1IV <- function(scenario, sub_sce_varying_par, sub_sce_var
   # Significant G x K interaction on X?
   
   # Z-stat = (β̂ɢx₂ - β̂ɢx₁) / √se(β̂ɢx₂)² + se(β̂ɢx₁)² 
-  Z_diff_BGX = (hat_BGX2 - hat_BGX1) / sqrt(se_hat_BGX2^2 + se_hat_BGX1^2)
+  Z_diff_BGX = (hat_BGX2 - hat_BGX1) / sqrt((se_hat_BGX2^2) + (se_hat_BGX1^2))
   # P val: Z-stat ~ N(0,1) | Ho
   p_Z_diff_BGX = 2*pnorm(abs(Z_diff_BGX), 0, 1, lower.tail = F)
   
@@ -468,7 +468,7 @@ simulation_indiv_data_1IV <- function(scenario, sub_sce_varying_par, sub_sce_var
   ## Add βxʏ to use according to k
   indiv_data$BXY <- c(rep(BXY1, N1), rep(BXY2, N2))
   
-  Y = simulate_outcome(indiv_data, cols = c("K", "G", "U", "eY", "BGX", "BXY"), BUY)
+  Y = simulate_outcome(indiv_data, cols = c("K", "G", "U", "eY", "BGX", "BXY"), BUX, BUY)
   indiv_data <- cbind(indiv_data, "Y" = Y)
   
   # Step 8: Test G association with Y: get β̂ɢʏₖ
@@ -524,7 +524,7 @@ simulation_indiv_data_1IV <- function(scenario, sub_sce_varying_par, sub_sce_var
   # Significant G x K interaction on Y?
   
   # Z-stat = (β̂ɢʏ₂ - β̂ɢʏ₁) / √se(β̂ɢʏ₂)² + se(β̂ɢʏ₁)² 
-  Z_diff_BGY = (hat_BGY2 - hat_BGY1) / sqrt(se_hat_BGY2^2 + se_hat_BGY1^2)
+  Z_diff_BGY = (hat_BGY2 - hat_BGY1) / sqrt((se_hat_BGY2^2) + (se_hat_BGY1^2))
   # P val: Z-stat ~ N(0,1) | Ho
   p_Z_diff_BGY = 2*pnorm(abs(Z_diff_BGY), 0, 1, lower.tail = F)
   
@@ -532,9 +532,9 @@ simulation_indiv_data_1IV <- function(scenario, sub_sce_varying_par, sub_sce_var
                     "p_Z_diff_BGY" = p_Z_diff_BGY)
   
   # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
   
-  
-  # Step 9: Calculate causal effects: get β̂xʏₖ
+  # Step 9: Calculate causal effects: get β̂xʏₖ = β̂ɢʏₖ / β̂ɢxₖ
   # ___________________________________________________________________
   
   hat_BXY1 <- hat_BGY1 / hat_BGX1
@@ -552,7 +552,7 @@ simulation_indiv_data_1IV <- function(scenario, sub_sce_varying_par, sub_sce_var
   
   out <- cbind(out, "diff_BXY1" = diff_BXY1, "diff_BXY2" = diff_BXY2)
   
-  # # Difference between true vs estimated delta |Δβxʏ - Δβ̂xʏ|
+  # Difference between true vs estimated delta |Δβxʏ - Δβ̂xʏ|
   # ----------------------------------------------------------
   # True causal effect difference: Δβxʏ = βxʏ₂ - βxʏ₁
   # Estimated causal effect difference: Δβ̂xʏ = β̂xʏ₂ - β̂xʏ₁
@@ -562,15 +562,21 @@ simulation_indiv_data_1IV <- function(scenario, sub_sce_varying_par, sub_sce_var
   
   out <- cbind(out, "hat_diff_BXY" = hat_diff_BXY, "diff_diff_BXY" = diff_diff_BXY)
   
-  # Significant X x K interaction on Y? se?????
+  # Significant X x K interaction on Y?
   # -------------------------------------------------------
-  # Z-stat = (β̂xʏ₂ - β̂xʏ₁) / √se(β̂xʏ₂)² + se(β̂xʏ₁)² 
-  # Z_diff_BXY = (hat_BXY2 - hat_BXY1) / sqrt(se_hat_BXY2^2 + se_hat_BXY1^2)
-  # # P val: Z-stat ~ N(0,1) | Ho
-  # p_Z_diff_BXY = 2*pnorm(abs(Z_diff_BXY), 0, 1, lower.tail = F)
-  # 
-  # out <- cbind(out, "Z_diff_BXY" = Z_diff_BXY, 
-  #              "p_Z_diff_BXY" = p_Z_diff_BXY)
+  ## First order from delta expansion for ratio se: se(β̂xʏₖ) = se(β̂ɢʏₖ) / |β̂ɢxₖ|
+  se_hat_BXY1 <- se_hat_BGY1 / abs(hat_BGX1)
+  se_hat_BXY2 <- se_hat_BGY2 / abs(hat_BGX2)
+  
+  # Z-stat = (β̂xʏ₂ - β̂xʏ₁) / √se(β̂xʏ₂)² + se(β̂xʏ₁)²
+  Z_diff_BXY = (hat_BXY2 - hat_BXY1) / sqrt((se_hat_BXY2^2) + (se_hat_BXY1^2))
+  # P val: Z-stat ~ N(0,1) | Ho
+  p_Z_diff_BXY = 2*pnorm(abs(Z_diff_BXY), 0, 1, lower.tail = F)
+
+  out <- cbind(out, "se_hat_BXY1" = se_hat_BXY1, 
+                    "se_hat_BXY2" = se_hat_BXY2, 
+                    "Z_diff_BXY" = Z_diff_BXY,
+                    "p_Z_diff_BXY" = p_Z_diff_BXY)
   
   if(replicate == 1){
     
@@ -583,7 +589,7 @@ simulation_indiv_data_1IV <- function(scenario, sub_sce_varying_par, sub_sce_var
     #       Ŷ ~ X, X̂, G, U, εx, εʏ
     # plot_pheno_vs_predictors(indiv_data, out, plot_dir_sc_replicate)
     # Plot correlation between exposure/outcome and predictors
-    cor_pheno_predictors(indiv_data, plot_dir_sc_replicate)
+    # cor_pheno_predictors(indiv_data, plot_dir_sc_replicate)
   }
   
   # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -599,9 +605,10 @@ simulation_indiv_data_1IV <- function(scenario, sub_sce_varying_par, sub_sce_var
 ## Run 100 replicates x scenario
 n_rep = 100
 
+## All 00 scenarios
 load(paste0(input_dir00, "/scenario.00.Rdata"), verbose = T)
 
-for (s in 20:44){
+for (s in 1:70){
   sim_args = scenarios00[s, ]
   
   scenario_res = vector()
@@ -629,6 +636,12 @@ BUY = sim_args["BUY"] %>% as.numeric()
 scenario = sim_args["scenario"]
 sub_sce_varying_par = sim_args["sub_sce_varying_par"]
 sub_sce_varying_par_value = sim_args["sub_sce_varying_par_value"]
+
+
+
+
+
+
 
 ## Reproducibility info
 session_info()
