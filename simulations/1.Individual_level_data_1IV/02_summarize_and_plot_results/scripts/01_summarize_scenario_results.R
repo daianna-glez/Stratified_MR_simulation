@@ -27,11 +27,11 @@ input_dir00 <- paste(getwd(), "simulations", "1.Individual_level_data_1IV", "00_
 
 ## Args 
 # scenario_args <- c(main = "scenario.00", sub_sce_varying_par = "N")
-scenario_args <- c(main = "scenario.00", sub_sce_varying_par = "r")
+# scenario_args <- c(main = "scenario.00", sub_sce_varying_par = "r")
 # scenario_args <- c(main = "scenario.00", sub_sce_varying_par = "q1_q2")
 # scenario_args <- c(main = "scenario.00", sub_sce_varying_par = "BGX1")
 # scenario_args <- c(main = "scenario.00", sub_sce_varying_par = "BXY1")
-# scenario_args <- c(main = "scenario.00", sub_sce_varying_par = "BUX_BUY")
+scenario_args <- c(main = "scenario.00", sub_sce_varying_par = "BUX_BUY")
 
 
 ## Scenario input dir
@@ -171,20 +171,19 @@ save(all_metrics, file = paste0(output_dir_sce, "/scenario_metrics_across_subsce
 
 ## For plotting results metrics replicates
 if(scenario_args["sub_sce_varying_par"] %in% c("N", "r", "BGX1", "BXY1")){
-  
   all_res$x <- stringr::str_split_i(all_res$sub_sce_varying_par_value, "=", 2) 
-  all_res$x <- factor(all_res$x, levels = unique(all_res$x))
-  all_metrics$x <- stringr::str_split_i(all_metrics$subscenario, "=", 2) 
-  
-}
+  all_metrics$x <- stringr::str_split_i(all_metrics$subscenario, "=", 2) } 
+
 if(scenario_args["sub_sce_varying_par"] == "q1_q2"){
   all_res$x <- gsub("^ ", "", gsub("q.=", " ", all_res$sub_sce_varying_par_value))
-  all_res$x <- factor(all_res$x, levels = unique(all_res$x))
-  
   all_metrics$x <- gsub("^ ", "", gsub("q.=", " ",  all_metrics$subscenario))
-  all_metrics$x <- factor(all_metrics$x, levels = unique(all_metrics$x))
+} 
+if(scenario_args["sub_sce_varying_par"] == "BUX_BUY"){
+  all_res$x <- gsub("BUX=", "", gsub("BUY=", " ", all_res$sub_sce_varying_par_value))
+  all_metrics$x <- gsub("BUX=", "", gsub("BUY=", " ", all_metrics$subscenario))
 }
-
+all_res$x <- factor(all_res$x, levels = unique(all_res$x))
+all_metrics$x <- factor(all_metrics$x, levels = unique(all_metrics$x))
 
 ## Plot metrics in all replicates across all subscenarios
 plot_metric_across_subscenarios <- function(all_res, all_metrics, metric_y, metric_to_show, plot_boxplots = F){
@@ -193,7 +192,8 @@ plot_metric_across_subscenarios <- function(all_res, all_metrics, metric_y, metr
                 "r" = "Ratio of stratum sample sizes N1/N2", 
                 "BGX1" = expression(beta[GX[1]]),
                 "BXY1" = expression(beta[XY[1]]), 
-                "q1_q2" = expression(q[1]*", "*q[2]))
+                "q1_q2" = expression(q[1]*", "*q[2]),
+                "BUX_BUY" = expression(beta[UX]*", "*beta[UY]))
   
   metric_to_show_lab = c("mean_q1_ob" = expression(bar(q)[ob1]*":"), 
                          "mean_q2_ob" = expression(bar(q)[ob2]*":"),
@@ -297,8 +297,6 @@ plot_metric_across_subscenarios <- function(all_res, all_metrics, metric_y, metr
     geom_point(color='gray', alpha = 0.3, size = 1) +
     theme_classic() +
     labs(x = x_labs[[scenario_args["sub_sce_varying_par"]]], y = metrics_labels[[metric_y]], subtitle = metric_to_show_lab[metric_to_show]) +
-    geom_text(data = all_metrics, aes(x = x, y = max(all_res[metric_y])+(max(all_res[metric_y]) - min(all_res[metric_y]))/15, 
-                                      label = signif(get(metric_to_show), digits = 3)), size = 2.4) +
     coord_cartesian(clip = "off", ylim = c(min(all_res[metric_y]), max(all_res[metric_y]))) +
     theme(plot.subtitle = element_text(size = 8), 
           axis.title.y = element_text(size = 9),
@@ -307,6 +305,11 @@ plot_metric_across_subscenarios <- function(all_res, all_metrics, metric_y, metr
           axis.line = element_line(linewidth = 0.4),
           axis.ticks = element_line(linewidth = 0.3),
           plot.margin = unit(c(1.5, 1, 1, 1), "lines"))
+  
+  if(metric_to_show != ""){
+    p = p + geom_text(data = all_metrics, aes(x = x, y = max(all_res[metric_y])+(max(all_res[metric_y]) - min(all_res[metric_y]))/15, 
+                                              label = signif(get(metric_to_show), digits = 3)), size = 2.4) 
+  }
   
   yintercept = case_when(metric_y %in% c("HWE_P_1", "HWE_P_2", "HWE_P_global", 
                                          "BGX_P_1", "BGX_P_2", "p_Z_diff_BGX", 
@@ -353,7 +356,6 @@ p6 <- plot_metric_across_subscenarios(all_res, all_metrics, "HWE_CHISQ_global", 
 
 plot_grid(plotlist = list(p1, p2, p3, p4, p5, p6), ncol = 3, align = "vh")
 ggsave(filename = paste0(plot_dir_sce, "/HWE_metrics_across_replicates_x_subsce.pdf"), width = 14, height = 6)
-# ggsave(filename = paste0(plot_dir_sce, "/HWE_metrics_across_replicates_x_subsce.pdf"), width = 17, height = 6)
 
 ## Plot ob MAF across replicates x subscenario
 p7 <- plot_metric_across_subscenarios(all_res, all_metrics, "q1_ob", "mean_q1_ob")
@@ -396,14 +398,14 @@ p24 <- plot_metric_across_subscenarios(all_res, all_metrics, "BGX_F_stat_1", "me
 p25 <- plot_metric_across_subscenarios(all_res, all_metrics, "BGX_F_stat_2", "mean_IV_F_stat_2", T)
 
 plot_grid(plotlist = list(p24, p25), ncol = 2, align = "vh")
-ggsave(filename = paste0(plot_dir_sce, "/IV_strength_across_replicates_x_subsce.pdf"), width = 10+3, height = 3)
+ggsave(filename = paste0(plot_dir_sce, "/IV_strength_across_replicates_x_subsce.pdf"), width = 10+6, height = 3)
 
 ## Plot true - hat BGXk
 p26 <- plot_metric_across_subscenarios(all_res, all_metrics, "diff_BGX1", "mean_diff_BGX1", T)
 p27 <- plot_metric_across_subscenarios(all_res, all_metrics, "diff_BGX2", "mean_diff_BGX2", T)
 
 plot_grid(plotlist = list(p26, p27), ncol = 2, align = "vh")
-ggsave(filename = paste0(plot_dir_sce, "/diff_BGXk_across_replicates_x_subsce.pdf"), width = 10+3, height = 3)
+ggsave(filename = paste0(plot_dir_sce, "/diff_BGXk_across_replicates_x_subsce.pdf"), width = 10+6, height = 3)
 
 ## Plot estimated between-strata BGX difference and true vs estimated difference
 p28 <- plot_metric_across_subscenarios(all_res, all_metrics, "hat_diff_BGX", "mean_hat_diff_BGX", T)
@@ -414,43 +416,29 @@ if(scenario_args["main"] %in% c("scenario.00", "scenario.01")){
   p31 <- plot_metric_across_subscenarios(all_res, all_metrics, "p_Z_diff_BGX", "TNR_GxK_on_X")
 }
 plot_grid(plotlist = list(p28, p29, p30, p31), ncol = 2, align = "vh")
-ggsave(filename = paste0(plot_dir_sce, "/between_strata_BGX_diff_across_replicates_x_subsce.pdf"), width = 10, height = 6)
+ggsave(filename = paste0(plot_dir_sce, "/between_strata_BGX_diff_across_replicates_x_subsce.pdf"), width = 10+7, height = 6)
 
 
 ## Plot estimated BGYk across replicates x subscenario 
-if(unique(all_res$BGY1) == 0){
-  p32 <- plot_metric_across_subscenarios(all_res, all_metrics, "hat_BGY1", "FPR_BGY1", T)
-  p33 <- plot_metric_across_subscenarios(all_res, all_metrics, "se_hat_BGY1", "FPR_BGY1", T)
-  p34 <- plot_metric_across_subscenarios(all_res, all_metrics, "BGY_t_stat_1", "FPR_BGY1", T)
-  p35 <- plot_metric_across_subscenarios(all_res, all_metrics, "BGY_P_1", "FPR_BGY1", T)
-} else{
-  p32 <- plot_metric_across_subscenarios(all_res, all_metrics, "hat_BGY1", "TPR_BGY1", T)
-  p33 <- plot_metric_across_subscenarios(all_res, all_metrics, "se_hat_BGY1", "TPR_BGY1", T)
-  p34 <- plot_metric_across_subscenarios(all_res, all_metrics, "BGY_t_stat_1", "TPR_BGY1", T)
-  p35 <- plot_metric_across_subscenarios(all_res, all_metrics, "BGY_P_1", "TPR_BGY1", T)
-}
+p32 <- plot_metric_across_subscenarios(all_res, all_metrics, "hat_BGY1", "", T)
+p33 <- plot_metric_across_subscenarios(all_res, all_metrics, "se_hat_BGY1", "", T)
+p34 <- plot_metric_across_subscenarios(all_res, all_metrics, "BGY_t_stat_1", "", T)
+p35 <- plot_metric_across_subscenarios(all_res, all_metrics, "BGY_P_1", "", T)
 
-if(unique(all_res$BGY2) == 0){
-  p36 <- plot_metric_across_subscenarios(all_res, all_metrics, "hat_BGY2", "FPR_BGY2", T)
-  p37 <- plot_metric_across_subscenarios(all_res, all_metrics, "se_hat_BGY2", "FPR_BGY2", T)
-  p38 <- plot_metric_across_subscenarios(all_res, all_metrics, "BGY_t_stat_2", "FPR_BGY2", T)
-  p39 <- plot_metric_across_subscenarios(all_res, all_metrics, "BGY_P_2", "FPR_BGY2", T)
-} else{
-  p36 <- plot_metric_across_subscenarios(all_res, all_metrics, "hat_BGY2", "TPR_BGY2", T)
-  p37 <- plot_metric_across_subscenarios(all_res, all_metrics, "se_hat_BGY2", "TPR_BGY2", T)
-  p38 <- plot_metric_across_subscenarios(all_res, all_metrics, "BGY_t_stat_2", "TPR_BGY2", T)
-  p39 <- plot_metric_across_subscenarios(all_res, all_metrics, "BGY_P_2", "TPR_BGY2", T)
-}
+p36 <- plot_metric_across_subscenarios(all_res, all_metrics, "hat_BGY2", "", T)
+p37 <- plot_metric_across_subscenarios(all_res, all_metrics, "se_hat_BGY2", "", T)
+p38 <- plot_metric_across_subscenarios(all_res, all_metrics, "BGY_t_stat_2", "", T)
+p39 <- plot_metric_across_subscenarios(all_res, all_metrics, "BGY_P_2", "", T)
 
 plot_grid(plotlist = list(p32, p33, p34, p35, p36, p37, p38, p39), ncol = 2, align = "vh")
-ggsave(filename = paste0(plot_dir_sce, "/BGYk_estimated_across_replicates_x_subsce.pdf"), width = 10, height = 12)
+ggsave(filename = paste0(plot_dir_sce, "/BGYk_estimated_across_replicates_x_subsce.pdf"), width = 10+3, height = 12)
 
 ## Plot true - hat BGYk
 p40 <- plot_metric_across_subscenarios(all_res, all_metrics, "diff_BGY1", "mean_diff_BGY1", T)
 p41 <- plot_metric_across_subscenarios(all_res, all_metrics, "diff_BGY2", "mean_diff_BGY2", T)
 
 plot_grid(plotlist = list(p40, p41), ncol = 2, align = "vh")
-ggsave(filename = paste0(plot_dir_sce, "/diff_BGYk_across_replicates_x_subsce.pdf"), width = 10, height = 3)
+ggsave(filename = paste0(plot_dir_sce, "/diff_BGYk_across_replicates_x_subsce.pdf"), width = 10+6, height = 3)
 
 
 ## Plot estimated between-strata BGY difference and true vs estimated difference
@@ -465,7 +453,7 @@ if(unique(all_res$diff_BGY) == 0){
 }
 
 plot_grid(plotlist = list(p42, p43, p44, p45), ncol = 2, align = "vh")
-ggsave(filename = paste0(plot_dir_sce, "/between_strata_BGY_diff_across_replicates_x_subsce.pdf"), width = 10, height = 6)
+ggsave(filename = paste0(plot_dir_sce, "/between_strata_BGY_diff_across_replicates_x_subsce.pdf"), width = 10+6, height = 6)
 
 
 ## Plot estimated BXYk across replicates x subscenario 
@@ -488,7 +476,7 @@ if(unique(all_res$diff_BXY) == 0){
 }
 
 plot_grid(plotlist = list(p46, p47, p48, p49, p50, p51, p52, p53), ncol = 2, align = "vh")
-ggsave(filename = paste0(plot_dir_sce, "/BXYk_estimated_across_replicates_x_subsce.pdf"), width = 10, height = 12)
+ggsave(filename = paste0(plot_dir_sce, "/BXYk_estimated_across_replicates_x_subsce.pdf"), width = 10+6, height = 12)
 
 
 
