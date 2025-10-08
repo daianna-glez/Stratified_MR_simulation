@@ -1,12 +1,12 @@
 #!/usr/bin/env Rscript
 
-library(tidyr)
-library(dplyr)
-library(ggplot2)
-library(cowplot)
-library(pheatmap)
-library(dichromat)
-library(sessioninfo)
+library(tidyr, quietly = T, warn.conflicts = F)
+library(dplyr, quietly = T, warn.conflicts = F)
+library(ggplot2, quietly = T, warn.conflicts = F)
+library(cowplot, quietly = T, warn.conflicts = F)
+library(pheatmap, quietly = T, warn.conflicts = F)
+library(dichromat, quietly = T, warn.conflicts = F)
+library(sessioninfo, quietly = T, warn.conflicts = F)
 
 rm(list = ls())
 set.seed(09222025)
@@ -294,11 +294,12 @@ simulation_indiv_data_1IV <- function(main_scenario, main_scenario_val, sub_sce_
   ## Output subdirs x main_scenario x replicate
   out_dir_sc <- paste(out_dir, main_scenario, main_scenario_val, sub_sce_varying_par, sub_sce_varying_par_value, sep = "/")
   dir.create(out_dir_sc, recursive = T, showWarnings = F)
-  
+
   ## df to save results (and inputs)
   out <- data.frame("main_scenario" = main_scenario, "main_scenario_val" = main_scenario_val, "sub_sce_varying_par" = sub_sce_varying_par, "sub_sce_varying_par_value" = sub_sce_varying_par_value, 
                     "replicate" = replicate, "N" = N, "r" = r, "q1" = q1, "q2" = q2, 
-                    "BGX1" = BGX1, "diff_BGX" = diff_BGX, "BXY1" = BXY1, "diff_BXY" = diff_BXY, "BUX" = BUX, "BUY" = BUY)
+                    "BGX1" = BGX1, "diff_BGX" = diff_BGX, "BGX2" = BGX1 + diff_BGX, 
+                    "BXY1" = BXY1, "diff_BXY" = diff_BXY, "BXY2" = BXY1 + diff_BXY, "BUX" = BUX, "BUY" = BUY)
   
   #  Step 1: Simulate strata: K | N, r
   # ___________________________________________________________________________
@@ -343,23 +344,23 @@ simulation_indiv_data_1IV <- function(main_scenario, main_scenario_val, sub_sce_
     HWE_res = HWE_test(n_aa, n_aA, n_AA) 
     q_ob <- signif((n_aA + (2*n_aa))/ (2*length(Gk)), digits = 4)
     
-    if(k != ""){
-      print(paste0("Observed MAF in stratum ", k, ": ", q_ob))
-      print(paste0("P-val for HWE test in stratum ", k, ": ", HWE_res$P.value))
-      if(HWE_res$P.value <= 0.05){
-        message(paste0("Warning: SNP deviates from HWE in stratum ", k, "."))
-      }
+      if(k != ""){
+    #   print(paste0("Observed MAF in stratum ", k, ": ", q_ob))
+    #   print(paste0("P-val for HWE test in stratum ", k, ": ", HWE_res$P.value))
+    #   if(HWE_res$P.value <= 0.05){
+    #     message(paste0("Warning: SNP deviates from HWE in stratum ", k, "."))
+    #   }
       
       out[,paste0("q", k, "_ob")] = q_ob
       out[,paste0("HWE_CHISQ_", k)] = HWE_res$CHISQ
       out[,paste0("HWE_P_", k)] = HWE_res$P.value
       
     } else{
-      print(paste0("Observed MAF in whole population: ", q_ob))
-      print(paste0("P-val for HWE test in whole population: ", HWE_res$P.value))
-      if(HWE_res$P.value <= 0.05){
-        message("Warning: SNP deviates from HWE in whole population.")
-      }
+      # print(paste0("Observed MAF in whole population: ", q_ob))
+      # print(paste0("P-val for HWE test in whole population: ", HWE_res$P.value))
+      # if(HWE_res$P.value <= 0.05){
+      #   message("Warning: SNP deviates from HWE in whole population.")
+      # }
       
       out[,"q_global_ob"] = q_ob
       out[,"HWE_CHISQ_global"] = HWE_res$CHISQ
@@ -417,8 +418,7 @@ simulation_indiv_data_1IV <- function(main_scenario, main_scenario_val, sub_sce_
   #  6.1: Confirm SNP is strong IV in both strata
   # ----------------------------------------------------------------------
   if(any(fit_X$Fstat < 10)){
-    message("Stopping: weak instrument. Simulate different one.")
-    stop()
+    message("Warning: weak instrument.")
   }
   out <- cbind(out, "BGX_F_stat_1" = fit_X$Fstat[1],  
                     "BGX_F_stat_2" = fit_X$Fstat[2])
@@ -605,23 +605,39 @@ simulation_indiv_data_1IV <- function(main_scenario, main_scenario_val, sub_sce_
 
 
 
-## All 00 scenarios
-load(paste0(input_dir00, "/scenario.00.Rdata"), verbose = T)
+# ---------------   Main script   ---------------  
+## (uncomment according to main scenario simulations run)
+## All 00 scenarios 
+# scenarios <- get(load(paste0(input_dir00, "/scenario.00.Rdata")))
+
+## All 01 scenarios
+scenarios <- get(load(paste0(input_dir00, "/scenario.01.Rdata")))
+
 
 ## 100 replicates x scenario
 n_rep = 100
 
-## Run for task ID (= scenario ID)
+## Run for task ID (= scenario row num)
 id <- commandArgs(trailingOnly = TRUE)
-sim_args <- scenarios00[id, ]
+sim_args <- scenarios[id, ]
 
-scenario_res = vector()
-for(i in 1:n_rep){
-   scenario_res = rbind(scenario_res, do.call(simulation_indiv_data_1IV, c(sim_args, i)))
+## Scenario out 
+out_dir_sc <- paste0(out_dir, "/", sim_args[1], "/", sim_args[2], "/", sim_args[3],  "/", sim_args[4])
+
+## Skip of 100 replicates were run already for scenario
+if("scenario_res_across_100replicates.Rdata" %in% list.files(out_dir_sc) & length(list.files(out_dir_sc)) >100){
+  stop("Outputs already generated for scenario.", call. = T)
+} else{
+  
+  scenario_res = vector()
+  for(i in 1:n_rep){
+    scenario_res = rbind(scenario_res, do.call(simulation_indiv_data_1IV, c(sim_args, i)))
+  }
+  
+  ## Save scenario results across replicates
+  save(scenario_res, file = paste0(out_dir_sc, "/scenario_res_across_", n_rep, "replicates.Rdata"))
 }
-
-## Save scenario results across replicates
-save(scenario_res, file = paste0(out_dir, "/", sim_args[1], "/", sim_args[2], "/", sim_args[3],  "/", sim_args[4], "/scenario_res_across_", n_rep, "replicates.Rdata"))
+  
 
 
 
@@ -654,11 +670,13 @@ save(scenario_res, file = paste0(out_dir, "/", sim_args[1], "/", sim_args[2], "/
 # diff_BXY = sim_args["diff_BXY"] %>% as.numeric()
 # BUX = sim_args["BUX"] %>% as.numeric()
 # BUY = sim_args["BUY"] %>% as.numeric()
+# #
+# main_scenario = sim_args["main_scenario"] %>% as.character()
+# main_scenario_val = sim_args["main_scenario_val"] %>% as.character()
+# sub_sce_varying_par = sim_args["sub_sce_varying_par"] %>% as.character()
+# sub_sce_varying_par_value = sim_args["sub_sce_varying_par_value"] %>% as.character()
 # 
-# main_scenario = sim_args["main_scenario"]
-# main_scenario_val = sim_args["main_scenario_val"]
-# sub_sce_varying_par = sim_args["sub_sce_varying_par"]
-# sub_sce_varying_par_value = sim_args["sub_sce_varying_par_value"]
+# replicate = 1
 
 
 
