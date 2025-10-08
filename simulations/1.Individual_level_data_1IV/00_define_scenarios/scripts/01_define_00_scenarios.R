@@ -5,7 +5,8 @@ library(sessioninfo)
 
 ## Initialize
 rm(list = ls())
-
+## For avoiding scientific notation
+options(scipen = 999)
 
 ################################################################################
 #          1. Simulation study based on individual level data for 1 IV
