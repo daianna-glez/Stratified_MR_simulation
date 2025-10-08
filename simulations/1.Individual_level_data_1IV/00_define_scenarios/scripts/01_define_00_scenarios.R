@@ -286,9 +286,13 @@ for (BGX1 in BGX1s_2){
 
 
 scenarios00[, 5:14] <- apply(scenarios00[, 5:14] , 2, as.numeric)
-write.table(scenarios00, file = paste0(out_dir, "/scenario.00.csv"), col.names = F, row.names = F, quote = F, na = "NA", sep = "\t")
-scenarios00$main_scenario_val <- ""
 save(scenarios00, file = paste0(out_dir, "/scenario.00.Rdata"))
+
+scenarios00_table <- scenarios00
+scenarios00_table$main_scenario_val <- NA
+write.table(scenarios00_table, file = paste0(out_dir, "/scenario.00.csv"), col.names = F, row.names = F, quote = F, na = "NA", sep = "\t")
+
+
 
 
 
