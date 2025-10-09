@@ -9,7 +9,8 @@ library(dichromat, quietly = T, warn.conflicts = F)
 library(sessioninfo, quietly = T, warn.conflicts = F)
 
 rm(list = ls())
-set.seed(09222025)
+# set.seed(09222025)
+options(scipen = 0)
 
 # ------------------------------------------------------------------------------
 #                   1. Run simulation replicates per scenario 
@@ -342,7 +343,7 @@ simulation_indiv_data_1IV <- function(main_scenario, main_scenario_val, sub_sce_
     n_AA = table(Gk)["0"]
     
     HWE_res = HWE_test(n_aa, n_aA, n_AA) 
-    q_ob <- signif((n_aA + (2*n_aa))/ (2*length(Gk)), digits = 4)
+    q_ob <- (n_aA + (2*n_aa))/ (2*length(Gk))
     
       if(k != ""){
     #   print(paste0("Observed MAF in stratum ", k, ": ", q_ob))
@@ -590,7 +591,7 @@ simulation_indiv_data_1IV <- function(main_scenario, main_scenario_val, sub_sce_
     #       X̂ ~ G, U, εx
     #       Y ~ X, X̂, G, U, εx, εʏ
     #       Ŷ ~ X, X̂, G, U, εx, εʏ
-    plot_pheno_vs_predictors(indiv_data, out, plot_dir_sc_replicate)
+    # plot_pheno_vs_predictors(indiv_data, out, plot_dir_sc_replicate)
     # Plot correlation between exposure/outcome and predictors
     cor_pheno_predictors(indiv_data, plot_dir_sc_replicate)
   }
@@ -608,10 +609,10 @@ simulation_indiv_data_1IV <- function(main_scenario, main_scenario_val, sub_sce_
 # ---------------   Main script   ---------------  
 ## (uncomment according to main scenario simulations run)
 ## All 00 scenarios 
-# scenarios <- get(load(paste0(input_dir00, "/scenario.00.Rdata")))
+scenarios <- get(load(paste0(input_dir00, "/scenario.00.Rdata")))
 
 ## All 01 scenarios
-scenarios <- get(load(paste0(input_dir00, "/scenario.01.Rdata")))
+# scenarios <- get(load(paste0(input_dir00, "/scenario.01.Rdata")))
 
 
 ## 100 replicates x scenario
@@ -624,30 +625,10 @@ sim_args <- scenarios[id, ]
 ## Scenario out 
 out_dir_sc <- paste0(out_dir, "/", sim_args[1], "/", sim_args[2], "/", sim_args[3],  "/", sim_args[4])
 
-## Skip of 100 replicates were run already for scenario
-if("scenario_res_across_100replicates.Rdata" %in% list.files(out_dir_sc) & length(list.files(out_dir_sc)) >100){
-  stop("Outputs already generated for scenario.", call. = T)
-} else{
-  
-  scenario_res = vector()
-  for(i in 1:n_rep){
-    scenario_res = rbind(scenario_res, do.call(simulation_indiv_data_1IV, c(sim_args, i)))
-  }
-  
-  ## Save scenario results across replicates
-  save(scenario_res, file = paste0(out_dir_sc, "/scenario_res_across_", n_rep, "replicates.Rdata"))
-}
-  
-
-
-
-
-
-
-## Read scenario args
-
-# for (s in 1:70){
-#   sim_args = scenarios00[s, ]
+## Skip if 100 replicates were run already for scenario
+# if("scenario_res_across_100replicates.Rdata" %in% list.files(out_dir_sc) & length(list.files(out_dir_sc)) >100){
+#   stop("Outputs already generated for scenario.", call. = T)
+# } else{
 #   
 #   scenario_res = vector()
 #   for(i in 1:n_rep){
@@ -655,11 +636,21 @@ if("scenario_res_across_100replicates.Rdata" %in% list.files(out_dir_sc) & lengt
 #   }
 #   
 #   ## Save scenario results across replicates
-#   save(scenario_res, file = paste0(out_dir, "/", sim_args[1], "/", sim_args[2], "/", sim_args[3], "/scenario_res_across_", n_rep, "replicates.Rdata"))
-#   
+#   save(scenario_res, file = paste0(out_dir_sc, "/scenario_res_across_", n_rep, "replicates.Rdata"))
 # }
+  
+
+scenario_res = vector()
+for(i in 1:n_rep){
+  scenario_res = rbind(scenario_res, do.call(simulation_indiv_data_1IV, c(sim_args, i)))
+}
+
+## Save scenario results across replicates
+save(scenario_res, file = paste0(out_dir_sc, "/scenario_res_across_", n_rep, "replicates.Rdata"))
 
 
+
+## Example test
 # N = sim_args["N"] %>% as.numeric()
 # r = sim_args["r"] %>% as.numeric()
 # q1 = sim_args["q1"] %>% as.numeric()
