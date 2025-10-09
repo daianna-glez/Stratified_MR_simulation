@@ -15,7 +15,6 @@ rm(list = ls())
 #  aggregates results across subscenarios of a varying parameter scenario. 
 # ______________________________________________________________________________
 
-## Define output dirs
 input_dir <- paste(getwd(), "simulations", "1.Individual_level_data_1IV", "02_summarize_and_plot_results", "inputs", sep = "/")
 out_dir <- paste(getwd(), "simulations", "1.Individual_level_data_1IV", "02_summarize_and_plot_results", "outputs", sep = "/")
 plot_dir <- paste(getwd(), "simulations", "1.Individual_level_data_1IV", "02_summarize_and_plot_results", "plots", sep = "/")
@@ -30,8 +29,8 @@ input_dir01 <- paste(getwd(), "simulations", "1.Individual_level_data_1IV", "01_
 
 
 ## Scenarios
-# all_scenarios <- get(load(paste0(input_dir00, "/scenario.00.Rdata")))
-all_scenarios <- get(load(paste0(input_dir00, "/scenario.01.Rdata")))[1:500,]
+all_scenarios <- get(load(paste0(input_dir00, "/scenario.00.Rdata")))
+# all_scenarios <- get(load(paste0(input_dir00, "/scenario.01.Rdata")))[1:500,]
 scenarios <- all_scenarios[, c("main_scenario", "main_scenario_val", "sub_sce_varying_par")] %>% unique()
 sub_scenarios <- all_scenarios[, c("main_scenario", "main_scenario_val", "sub_sce_varying_par","sub_sce_varying_par_value")]
 
@@ -43,7 +42,7 @@ for(j in 1:nrow(sub_scenarios)){
   scenario <- paste(sub_sce, collapse = "/")
   res <- get(load(paste(c(input_dir01, scenario, "scenario_res_across_100replicates.Rdata"), collapse = "/")))
   if(ncol(res) != 77){
-    print(j)
+    print(ncol(res))
   }
   if(!"scenario_res_across_100replicates.Rdata" %in% list.files(paste(c(input_dir01, scenario), collapse = "/"))){
     print(j)
@@ -51,9 +50,9 @@ for(j in 1:nrow(sub_scenarios)){
 }
 
 ## For agg results across subscenarios
-for(r in 1:nrow(scenarios)){
-  assign(paste(c("all_res", scenarios[r,]), collapse = "_"), vector())
-  assign(paste(c("all_metrics", scenarios[r,]), collapse = "_"), vector())
+for(j in 1:nrow(scenarios)){
+  assign(paste(c("all_res", scenarios[j,]), collapse = "_"), vector())
+  assign(paste(c("all_metrics", scenarios[j,]), collapse = "_"), vector())
 }
 
 
@@ -74,7 +73,7 @@ for(j in 1:nrow(sub_scenarios)){
   
   ## Extract results across replicates 
   res <- get(load(paste(c(input_dir01, scenario, "scenario_res_across_100replicates.Rdata"), collapse = "/")))
-  
+
   if(ncol(res) == 75){
    res = cbind(res[,1:11], "BGX2" = res$BGX1 + res$diff_BGX, res[,12:13], "BXY2" = res$BXY1 + res$diff_BXY, res[,14:75])
   }
