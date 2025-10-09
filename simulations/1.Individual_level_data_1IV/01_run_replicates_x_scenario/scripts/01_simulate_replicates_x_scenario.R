@@ -9,7 +9,9 @@ library(dichromat, quietly = T, warn.conflicts = F)
 library(sessioninfo, quietly = T, warn.conflicts = F)
 
 rm(list = ls())
-# set.seed(09222025)
+# Set seed at the beginning of scenario run (outside replication for-loop)
+# to ensure within-run replicate variability of a run, but consistent results across reruns
+set.seed(09222025)
 options(scipen = 0)
 
 # ------------------------------------------------------------------------------
