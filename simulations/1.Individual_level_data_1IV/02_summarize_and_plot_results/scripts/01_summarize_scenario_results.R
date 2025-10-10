@@ -136,9 +136,12 @@ for(j in 1:nrow(sub_scenarios)){
                              "PR_GxK_on_Y" = mean(res$p_Z_diff_BGY < 0.05),
                              "NR_GxK_on_Y" = mean(res$p_Z_diff_BGY >= 0.05),
                              
-                             ## +/- rate for XxK interaction on Y
+                             ## +/- rate for XxK interaction on Y (based on 1st term se's)
                              "PR_XxK_on_Y" = mean(res$p_Z_diff_BXY < 0.05),
-                             "NR_XxK_on_Y" = mean(res$p_Z_diff_BXY >= 0.05)
+                             "NR_XxK_on_Y" = mean(res$p_Z_diff_BXY >= 0.05),
+                             ## +/- rate for XxK interaction on Y (based on 2nd term se's)
+                             "PR_XxK_on_Y_2nd" = mean(res$p_Z_diff_BXY_2nd < 0.05),
+                             "NR_XxK_on_Y_2nd" = mean(res$p_Z_diff_BXY_2nd >= 0.05)
                            ))
   
   save(scenario_metrics, file = paste(c(input_dir01, scenario, "scenario_summary_metrics.Rdata"), collapse = "/")) 
