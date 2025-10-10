@@ -1,7 +1,7 @@
 
-library(tidyr, quietly = T)
-library(dplyr, quietly = T)
-library(sessioninfo, quietly = T)
+library(tidyr)
+library(dplyr)
+library(sessioninfo)
 
 rm(list = ls())
 
@@ -30,7 +30,7 @@ input_dir01 <- paste(getwd(), "simulations", "1.Individual_level_data_1IV", "01_
 
 ## Scenarios
 all_scenarios <- get(load(paste0(input_dir00, "/scenario.00.Rdata")))
-# all_scenarios <- get(load(paste0(input_dir00, "/scenario.01.Rdata")))[1:500,]
+# all_scenarios <- get(load(paste0(input_dir00, "/scenario.01.Rdata")))[1:19,]
 scenarios <- all_scenarios[, c("main_scenario", "main_scenario_val", "sub_sce_varying_par")] %>% unique()
 sub_scenarios <- all_scenarios[, c("main_scenario", "main_scenario_val", "sub_sce_varying_par","sub_sce_varying_par_value")]
 
@@ -77,6 +77,15 @@ for(j in 1:nrow(sub_scenarios)){
   if(ncol(res) == 75){
    res = cbind(res[,1:11], "BGX2" = res$BGX1 + res$diff_BGX, res[,12:13], "BXY2" = res$BXY1 + res$diff_BXY, res[,14:75])
   }
+  
+  ## Add se for estimated causal effects including 2nd term from Delta expansion
+  res$se_hat_BXY1_2nd <- sqrt((res$se_hat_BGY1^2 / res$hat_BGX1^2) + ((res$hat_BGY1^2)*(res$se_hat_BGX1^2) / (res$hat_BGX1^4)))
+  res$se_hat_BXY2_2nd <- sqrt((res$se_hat_BGY2^2 / res$hat_BGX2^2) + ((res$hat_BGY2^2)*(res$se_hat_BGX2^2) / (res$hat_BGX2^4)))
+  
+  ## Z score and Pval for causal effect diff based on those se's
+  res$Z_diff_BXY_2nd <- (res$hat_BXY2 - res$hat_BXY1) / sqrt((res$se_hat_BXY2_2nd^2) + (res$se_hat_BXY1_2nd^2))
+  res$p_Z_diff_BXY_2nd = 2*pnorm(abs(res$Z_diff_BXY_2nd), 0, 1, lower.tail = F)
+  
   ## Append with other sub scenarios results
   all_res <- get(paste(c("all_res", sub_sce[-4]), collapse = "_"))
   all_res <- rbind(all_res, res)

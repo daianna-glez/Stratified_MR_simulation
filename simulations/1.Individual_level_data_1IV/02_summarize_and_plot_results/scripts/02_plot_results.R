@@ -10,8 +10,8 @@ rm(list = ls())
 # ______________________________________________________________________________
 #    2.0  Plot results across subscenarios of a varying parameter(s) scenario  
 # ______________________________________________________________________________
-#  This script summarizes results across replicates per subscenario and
-#  aggregates results across subscenarios of a varying parameter scenario. 
+#  This script plots relevant per-replicate metrics across subscenarios of a
+#  varying parameter scenario. 
 # ______________________________________________________________________________
 
 input_dir <- paste(getwd(), "simulations", "1.Individual_level_data_1IV", "02_summarize_and_plot_results", "inputs", sep = "/")
@@ -23,16 +23,10 @@ input_dir00 <- paste(getwd(), "simulations", "1.Individual_level_data_1IV", "00_
 input_dir01 <- paste(getwd(), "simulations", "1.Individual_level_data_1IV", "01_run_replicates_x_scenario", "outputs", sep = "/")
 
 ## Scenarios
-all_scenarios <- get(load(paste0(input_dir00, "/scenario.00.Rdata")))
-# all_scenarios <- get(load(paste0(input_dir00, "/scenario.01.Rdata")))[1:500,]
+# all_scenarios <- get(load(paste0(input_dir00, "/scenario.00.Rdata")))
+all_scenarios <- get(load(paste0(input_dir00, "/scenario.01.Rdata")))[1:500,]
 scenarios <- all_scenarios[, c("main_scenario", "main_scenario_val", "sub_sce_varying_par")] %>% unique()
 
-
-## Scenarios
-# all_scenarios <- get(load(paste0(input_dir00, "/scenario.00.Rdata")))
-# all_scenarios <- get(load(paste0(input_dir00, "/scenario.01.Rdata")))[1:500,]
-# scenarios <- all_scenarios[, c("main_scenario", "main_scenario_val", "sub_sce_varying_par")] %>% unique()
-# 
 
 ## Compare metrics in all replicates across all subscenarios
 plot_metric_across_subscenarios <- function(scenario, metric_y, metric_to_show, plot_boxplots = F){
@@ -300,6 +294,7 @@ plot_metric_across_subscenarios <- function(scenario, metric_y, metric_to_show, 
   else if(metric_y == "hat_BXY1"){yintercept = unique(all_res$BXY1)}
   else if(metric_y == "hat_BXY2"){yintercept = unique(all_res$BXY2)}
   else if(metric_y == "hat_diff_BXY"){yintercept = unique(all_res$diff_BXY)}
+  else{yintercept = NA}
 
   if(length(yintercept) == 1){
     if(!is.na(yintercept)){
@@ -323,8 +318,9 @@ plot_metric_across_subscenarios <- function(scenario, metric_y, metric_to_show, 
 ## Plot metrics across replicates, across subscenarios
 for(scenario in scenarios){
   
-  # scenario <- scenarios[1, ]
+  scenario <- scenarios[2, ]
   plot_dir_sce <- paste(plot_dir, paste(scenario, collapse = "/"), sep = "/")
+  dir.create(plot_dir_sce, recursive = T, showWarnings = F)
   width <- c("N" = 17, "r" = 17, "q1_q2" = 22, "BGX1" = 17, "BXY1" = 17, "BUX_BUY" = 17, 
              "N_r" = 27, "N_q1_q2" = 49, "N_BGX1" = 27, "N_BXY1" = 27, "r_q1_q2" = 49,
              "r_BGX1" = 27, "r_BXY1" = 27, "q1_q2_BGX1" = 40, "q1_q2_BXY1" = 49, "BGX1_BXY1" = 27)
