@@ -5,12 +5,12 @@
 # ------------------------------------------------------------------------------
 
 # All scenarios (uncomment according to main scenario run)
-PARAM_FILE="../../00_define_scenarios/outputs/scenario.00.csv"
-# PARAM_FILE="../../00_define_scenarios/outputs/scenario.01.csv"
+# PARAM_FILE="../../00_define_scenarios/outputs/scenario.00.csv"
+PARAM_FILE="../../00_define_scenarios/outputs/scenario.01.csv"
 
 n=$(cat  $PARAM_FILE | wc -l)
 
-for i in $(seq 74 $n)
+for i in $(seq 1 1)
 do
 
 # Row for scenario

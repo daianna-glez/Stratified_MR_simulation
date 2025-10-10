@@ -1,7 +1,9 @@
 
-library(tidyr, quietly = T)
-library(dplyr, quietly = T)
-library(sessioninfo, quietly = T)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+library(cowplot)
+library(sessioninfo)
 
 rm(list = ls())
 
@@ -55,6 +57,7 @@ plot_metric_across_subscenarios <- function(scenario, metric_y, metric_to_show, 
     all_metrics$x <- gsub("^ ", "", gsub("q.=", " ",  all_metrics$sub_sce_varying_par_value))
     all_metrics$x <- factor(all_metrics$x, levels = unique(all_metrics$x))
   }
+  
   if(scenario["sub_sce_varying_par"] == "BUX_BUY"){
     all_res$x <- gsub("BUY=", " ", gsub("BUX=", " ", all_res$sub_sce_varying_par_value))
     all_res$x <- factor(all_res$x, levels = unique(all_res$x))
@@ -62,11 +65,41 @@ plot_metric_across_subscenarios <- function(scenario, metric_y, metric_to_show, 
     all_metrics$x <- gsub("BUY=", " ", gsub("BUX=", " ", all_metrics$sub_sce_varying_par_value))
     all_metrics$x <- factor(all_metrics$x, levels = unique(all_metrics$x))
   }
+  
   if(grepl("_", scenario["sub_sce_varying_par"]) & !scenario["sub_sce_varying_par"] %in% c("q1_q2", "BUX_BUY")){
     
-    if(grepl("q1_q2", scenario["sub_sce_varying_par"])){
+    if(grepl("_q1_q2", scenario["sub_sce_varying_par"])){
+      all_res$q1_q2 <- paste0(all_res$q1, ", ", all_res$q2)
+      cols_names <- c(gsub("_q1_q2", "", scenario["sub_sce_varying_par"]), "q1_q2")
+      all_res$x <- all_res[,cols_names[1]] %>% as.character()
+      all_res$x[which(all_res$x == "1e+05")] <- "100000"
+      all_res$x  <- factor(all_res$x, levels = unique(all_res$x))
+      all_res$x2 <- all_res[,cols_names[2]] %>% as.character()
+      all_res$x2  <- factor(all_res$x2, levels = unique(all_res$x2))
       
-    } else{
+      all_metrics$x <- gsub(paste0(cols_names[1], "="), "", gsub(",q.*", "", all_metrics$sub_sce_varying_par_value))
+      all_metrics$x  <- factor(all_metrics$x, levels = unique(all_metrics$x))
+      all_metrics$x2 <- gsub("q2=", " ", gsub("^.*,q1=", "", all_metrics$sub_sce_varying_par_value))
+      all_metrics$x2  <- factor(all_metrics$x2, levels = unique(all_metrics$x2))
+    } 
+    else if(grepl("^q1_q2_", scenario["sub_sce_varying_par"])){
+      all_res$q1_q2 <- paste0(all_res$q1, ", ", all_res$q2)
+      cols_names <- c("q1_q2", gsub("q1_q2_", "", scenario["sub_sce_varying_par"]))
+      all_res$x <- all_res[,cols_names[1]] %>% as.character()
+      all_res$x[which(all_res$x == "1e+05")] <- "100000"
+      all_res$x  <- factor(all_res$x, levels = unique(all_res$x))
+      all_res$x2 <- all_res[,cols_names[2]] %>% as.character()
+      all_res$x2  <- factor(all_res$x2, levels = unique(all_res$x2))
+      
+      all_metrics$x <- stringr::str_split_i(all_metrics$sub_sce_varying_par_value, paste0(",", cols_names[2]), 1) %>% 
+        gsub("q1=", "", .) %>% gsub("q2=", " ", .)
+      all_metrics$x  <- factor(all_metrics$x, levels = unique(all_metrics$x))
+      all_metrics$x2 <- stringr::str_split_i(all_metrics$sub_sce_varying_par_value, ",", 3) %>% 
+        gsub(paste0(cols_names[2], "="), "", .)
+      all_metrics$x2  <- factor(all_metrics$x2, levels = unique(all_metrics$x2))
+      
+    }
+    else{
       cols_to_add_names <- stringr::str_split(scenario["sub_sce_varying_par"], "_") %>% unlist
       cols_to_add <- do.call(rbind, stringr::str_split(all_res[,"sub_sce_varying_par_value"], ",")) %>% as.data.frame()
       colnames(cols_to_add) <- cols_to_add_names
@@ -74,13 +107,14 @@ plot_metric_across_subscenarios <- function(scenario, metric_y, metric_to_show, 
         cols_to_add[,col] <- gsub(paste0(cols_to_add_names[col], "="), "", cols_to_add[,col]) 
       }
       all_res$x <- cols_to_add[,1]
+      all_res$x[which(all_res$x == "1e+05")] <- "100000"
       all_res$x  <- factor(all_res$x, levels = unique(all_res$x))
       all_res$x2 <- cols_to_add[,2]
       all_res$x2  <- factor(all_res$x2, levels = unique(all_res$x2))
       
-      all_metrics$x <- stringr::str_split_i(all_metrics$sub_sce_varying_par_value, ",", 1) %>% gsub(".=", "", .)
+      all_metrics$x <- stringr::str_split_i(all_metrics$sub_sce_varying_par_value, ",", 1) %>% gsub(".*=", "", .)
       all_metrics$x  <- factor(all_metrics$x, levels = unique(all_metrics$x))
-      all_metrics$x2 <- stringr::str_split_i(all_metrics$sub_sce_varying_par_value, ",", 2) %>% gsub(".=", "", .) 
+      all_metrics$x2 <- stringr::str_split_i(all_metrics$sub_sce_varying_par_value, ",", 2) %>% gsub(".*=", "", .) 
       all_metrics$x2  <- factor(all_metrics$x2, levels = unique(all_metrics$x2))
     }
     
@@ -216,11 +250,18 @@ plot_metric_across_subscenarios <- function(scenario, metric_y, metric_to_show, 
   }
 
   ## Plot for 2 varying pars
-  if(scenario["sub_sce_varying_par"] %in% c("N_r")){
+  if(scenario["sub_sce_varying_par"] %in% c("N_r", "N_q1_q2", "N_BGX1", "N_BXY1", "r_q1_q2", "r_BGX1", "r_BXY1", 
+                                            "q1_q2_BGX1", "q1_q2_BXY1", "BGX1_BXY1")){
     
-    xvar <- strsplit(scenario$sub_sce_varying_par, "_")[[1]][1]
-    col_var <- strsplit(scenario$sub_sce_varying_par, "_")[[1]][2]
-    
+    if(!grepl("q1_q2", scenario["sub_sce_varying_par"])){
+      xvar <- strsplit(scenario$sub_sce_varying_par, "_")[[1]][1]
+      col_var <- strsplit(scenario$sub_sce_varying_par, "_")[[1]][2]
+    }
+    else{
+      xvar = cols_names[1]
+      col_var = cols_names[2]
+    }
+
     p = ggplot(all_res, aes(x = x, y = get(metric_y))) + 
       geom_point(color='gray', alpha = 0.3, size = 1) +
       theme_classic() +
@@ -244,22 +285,22 @@ plot_metric_across_subscenarios <- function(scenario, metric_y, metric_to_show, 
             axis.ticks = element_line(linewidth = 0.3), 
             plot.margin = unit(c(1.3, 1, 1, 1), "lines"))
   }
-  yintercept = case_when(metric_y %in% c("HWE_P_1", "HWE_P_2", "HWE_P_global", 
-                                         "BGX_P_1", "BGX_P_2", "p_Z_diff_BGX", 
-                                         "BGY_P_1", "BGY_P_2", "p_Z_diff_BGY", "p_Z_diff_BXY") ~ 0.05, 
-                         metric_y == "q1_ob" ~ unique(all_res$q1),
-                         metric_y == "q2_ob" ~ unique(all_res$q2),
-                         metric_y == "hat_BGX1" ~ unique(all_res$BGX1), 
-                         metric_y == "hat_BGX2" ~ unique(all_res$BGX2), 
-                         metric_y == "hat_diff_BGX" ~ unique(all_res$diff_BGX), 
-                         metric_y == "hat_BGY1" ~ unique(all_res$BGY1), 
-                         metric_y == "hat_BGY2" ~ unique(all_res$BGY2), 
-                         metric_y == "hat_diff_BGY" ~ unique(all_res$diff_BGY), 
-                         metric_y == "hat_BXY1" ~ unique(all_res$BXY1), 
-                         metric_y == "hat_BXY2" ~ unique(all_res$BXY2), 
-                         metric_y == "hat_diff_BXY" ~ unique(all_res$diff_BXY), .default = NA
-  ) %>% unique()
   
+  ## To show yline
+  if(metric_y %in% c("HWE_P_1", "HWE_P_2", "HWE_P_global", "BGX_P_1", "BGX_P_2", "p_Z_diff_BGX", 
+                     "BGY_P_1", "BGY_P_2", "p_Z_diff_BGY", "p_Z_diff_BXY")){yintercept = 0.05} 
+  else if(metric_y == "q1_ob"){yintercept = unique(all_res$q1)}
+  else if(metric_y == "q2_ob"){yintercept = unique(all_res$q2)}
+  else if(metric_y == "hat_BGX1"){yintercept = unique(all_res$BGX1)}
+  else if(metric_y == "hat_BGX2"){yintercept = unique(all_res$BGX2)}
+  else if(metric_y == "hat_diff_BGX"){yintercept = unique(all_res$diff_BGX)}
+  else if(metric_y == "hat_BGY1"){yintercept = unique(all_res$BGY1)}
+  else if(metric_y == "hat_BGY2"){yintercept = unique(all_res$BGY2)}
+  else if(metric_y == "hat_diff_BGY"){yintercept = unique(all_res$diff_BGY)}
+  else if(metric_y == "hat_BXY1"){yintercept = unique(all_res$BXY1)}
+  else if(metric_y == "hat_BXY2"){yintercept = unique(all_res$BXY2)}
+  else if(metric_y == "hat_diff_BXY"){yintercept = unique(all_res$diff_BXY)}
+
   if(length(yintercept) == 1){
     if(!is.na(yintercept)){
       p <- p + geom_hline(yintercept = yintercept, linewidth = 0.5, alpha = 0.8, color = "gray40")
@@ -271,8 +312,8 @@ plot_metric_across_subscenarios <- function(scenario, metric_y, metric_to_show, 
                             box.linewidth = 0.2, whisker.linewidth = 0.2, staple.linewidth = 0.2, median.linewidth = 0.4, inherit.aes = T) 
   }
   
-  if(unique(all_res$sub_sce_varying_par) == "q1_q2"){
-    p <- p + theme(axis.text = element_text(size = 6, angle = 45, hjust = 1))
+  if(unique(all_res$sub_sce_varying_par) %in% c("q1_q2", "q1_q2_BGX1")){
+    p <- p + theme(axis.text.x = element_text(size = 6, angle = 45, hjust = 1))
   }
   
   return(p)
@@ -282,11 +323,11 @@ plot_metric_across_subscenarios <- function(scenario, metric_y, metric_to_show, 
 ## Plot metrics across replicates, across subscenarios
 for(scenario in scenarios){
   
-  scenario <- scenarios[7, ]
+  # scenario <- scenarios[1, ]
   plot_dir_sce <- paste(plot_dir, paste(scenario, collapse = "/"), sep = "/")
-  width <- c("N" = 17, "r" = 17, "q1_q2" = 22, "BGX1" = 17, "BXY1" = 17, "BUX_BUY" = 17, "N_r" = 27)
-  a <- if_else(scenario$sub_sce_varying_par %in% c("N_r"), 0, 0)
-  plot_op <- if_else(scenario$sub_sce_varying_par %in% c("N_r"), F, T)
+  width <- c("N" = 17, "r" = 17, "q1_q2" = 22, "BGX1" = 17, "BXY1" = 17, "BUX_BUY" = 17, 
+             "N_r" = 27, "N_q1_q2" = 49, "N_BGX1" = 27, "N_BXY1" = 27, "r_q1_q2" = 49,
+             "r_BGX1" = 27, "r_BXY1" = 27, "q1_q2_BGX1" = 40, "q1_q2_BXY1" = 49, "BGX1_BXY1" = 27)
 
   ## Plot HWE p-vals and chi-square stats 
   p1 <- plot_metric_across_subscenarios(scenario, "HWE_P_1", "FPR_HWE_1")
@@ -297,7 +338,7 @@ for(scenario in scenarios){
   p6 <- plot_metric_across_subscenarios(scenario, "HWE_CHISQ_global", "FPR_HWE_global", T)
   
   plot_grid(plotlist = list(p1, p2, p3, p4, p5, p6), ncol = 3, align = "vh")
-  ggsave(filename = paste0(plot_dir_sce, "/HWE_metrics_across_replicates_x_subsce.pdf"), width = width[scenario$sub_sce_varying_par], height = 6+a)
+  ggsave(filename = paste0(plot_dir_sce, "/HWE_metrics_across_replicates_x_subsce.pdf"), width = width[scenario$sub_sce_varying_par], height = 6)
   
   ## Plot ob MAF
   p7 <- plot_metric_across_subscenarios(scenario, "q1_ob", "mean_q1_ob")
@@ -305,7 +346,7 @@ for(scenario in scenarios){
   p9 <- plot_metric_across_subscenarios(scenario, "q_global_ob", "mean_q_global_ob")
   
   plot_grid(plotlist = list(p7, p8, p9), ncol = 3, align = "vh")
-  ggsave(filename = paste0(plot_dir_sce, "/ob_MAF_across_replicates_x_subsce.pdf"), width = width[scenario$sub_sce_varying_par], height = 3+a)
+  ggsave(filename = paste0(plot_dir_sce, "/ob_MAF_across_replicates_x_subsce.pdf"), width = width[scenario$sub_sce_varying_par], height = 3)
   
   ## Plot num of aa, aA, AA individuals 
   p10 <- plot_metric_across_subscenarios(scenario, "n_aa_1", "mean_q1_ob")
@@ -316,34 +357,34 @@ for(scenario in scenarios){
   p15 <- plot_metric_across_subscenarios(scenario, "n_AA_2", "mean_q2_ob")
   
   plot_grid(plotlist = list(p10, p11, p12, p13, p14, p15), ncol = 3, align = "vh")
-  ggsave(filename = paste0(plot_dir_sce, "/num_genotype_across_replicates_x_subsce.pdf"), width = width[scenario$sub_sce_varying_par], height = 6+a)
+  ggsave(filename = paste0(plot_dir_sce, "/num_genotype_across_replicates_x_subsce.pdf"), width = width[scenario$sub_sce_varying_par], height = 6)
   
   ## Plot estimated BGX --always show true BGXk and PR (always T)
-  p16 <- plot_metric_across_subscenarios(scenario, "hat_BGX1", "TPR_BGX1", plot_op)
-  p17 <- plot_metric_across_subscenarios(scenario, "hat_BGX2", "TPR_BGX2", plot_op)
-  p18 <- plot_metric_across_subscenarios(scenario, "se_hat_BGX1", "TPR_BGX1", plot_op)
-  p19 <- plot_metric_across_subscenarios(scenario, "se_hat_BGX2", "TPR_BGX2", plot_op)
-  p20 <- plot_metric_across_subscenarios(scenario, "BGX_t_stat_1", "TPR_BGX1", plot_op)
-  p21 <- plot_metric_across_subscenarios(scenario, "BGX_t_stat_2", "TPR_BGX2", plot_op)
-  p22 <- plot_metric_across_subscenarios(scenario, "BGX_P_1", "TPR_BGX1", plot_op)
-  p23 <- plot_metric_across_subscenarios(scenario, "BGX_P_2", "TPR_BGX2", plot_op)
+  p16 <- plot_metric_across_subscenarios(scenario, "hat_BGX1", "TPR_BGX1", T)
+  p17 <- plot_metric_across_subscenarios(scenario, "hat_BGX2", "TPR_BGX2", T)
+  p18 <- plot_metric_across_subscenarios(scenario, "se_hat_BGX1", "TPR_BGX1", T)
+  p19 <- plot_metric_across_subscenarios(scenario, "se_hat_BGX2", "TPR_BGX2", T)
+  p20 <- plot_metric_across_subscenarios(scenario, "BGX_t_stat_1", "TPR_BGX1", T)
+  p21 <- plot_metric_across_subscenarios(scenario, "BGX_t_stat_2", "TPR_BGX2", T)
+  p22 <- plot_metric_across_subscenarios(scenario, "BGX_P_1", "TPR_BGX1", T)
+  p23 <- plot_metric_across_subscenarios(scenario, "BGX_P_2", "TPR_BGX2", T)
   
   plot_grid(plotlist = list(p16, p17, p18, p19, p20, p21, p22, p23), ncol = 2, align = "vh")
-  ggsave(filename = paste0(plot_dir_sce, "/BGXk_estimated_across_replicates_x_subsce.pdf"), width = width[scenario$sub_sce_varying_par], height = 12+a)
+  ggsave(filename = paste0(plot_dir_sce, "/BGXk_estimated_across_replicates_x_subsce.pdf"), width = width[scenario$sub_sce_varying_par], height = 12)
   
   ## Plot IV strength 
-  p24 <- plot_metric_across_subscenarios(scenario, "BGX_F_stat_1", "mean_IV_F_stat_1", plot_op)
-  p25 <- plot_metric_across_subscenarios(scenario, "BGX_F_stat_2", "mean_IV_F_stat_2", plot_op)
+  p24 <- plot_metric_across_subscenarios(scenario, "BGX_F_stat_1", "mean_IV_F_stat_1", T)
+  p25 <- plot_metric_across_subscenarios(scenario, "BGX_F_stat_2", "mean_IV_F_stat_2", T)
   
   plot_grid(plotlist = list(p24, p25), ncol = 2, align = "vh")
-  ggsave(filename = paste0(plot_dir_sce, "/IV_strength_across_replicates_x_subsce.pdf"), width = width[scenario$sub_sce_varying_par], height = 3+a)
+  ggsave(filename = paste0(plot_dir_sce, "/IV_strength_across_replicates_x_subsce.pdf"), width = width[scenario$sub_sce_varying_par], height = 3)
   
   ## Plot true - hat BGXk
-  p26 <- plot_metric_across_subscenarios(scenario, "diff_BGX1", "mean_diff_BGX1", plot_op)
-  p27 <- plot_metric_across_subscenarios(scenario, "diff_BGX2", "mean_diff_BGX2", plot_op)
+  p26 <- plot_metric_across_subscenarios(scenario, "diff_BGX1", "mean_diff_BGX1", T)
+  p27 <- plot_metric_across_subscenarios(scenario, "diff_BGX2", "mean_diff_BGX2", T)
   
   plot_grid(plotlist = list(p26, p27), ncol = 2, align = "vh")
-  ggsave(filename = paste0(plot_dir_sce, "/diff_BGXk_across_replicates_x_subsce.pdf"), width = width[scenario$sub_sce_varying_par], height = 3+a)
+  ggsave(filename = paste0(plot_dir_sce, "/diff_BGXk_across_replicates_x_subsce.pdf"), width = width[scenario$sub_sce_varying_par], height = 3)
   
   ## Plot estimated between-strata BGX difference and true vs estimated difference
   p28 <- plot_metric_across_subscenarios(scenario, "hat_diff_BGX", "mean_hat_diff_BGX", T)
@@ -352,7 +393,7 @@ for(scenario in scenarios){
   p31 <- plot_metric_across_subscenarios(scenario, "p_Z_diff_BGX", "PR_GxK_on_X")
   
   plot_grid(plotlist = list(p28, p29, p30, p31), ncol = 2, align = "vh")
-  ggsave(filename = paste0(plot_dir_sce, "/between_strata_BGX_diff_across_replicates_x_subsce.pdf"), width = width[scenario$sub_sce_varying_par], height = 6+a)
+  ggsave(filename = paste0(plot_dir_sce, "/between_strata_BGX_diff_across_replicates_x_subsce.pdf"), width = width[scenario$sub_sce_varying_par], height = 6)
   
   ## Plot estimated BGYk across replicates x subscenario 
   p32 <- plot_metric_across_subscenarios(scenario, "hat_BGY1", "PR_BGY1", T)
@@ -366,15 +407,14 @@ for(scenario in scenarios){
   p39 <- plot_metric_across_subscenarios(scenario, "BGY_P_2", "PR_BGY2", T)
   
   plot_grid(plotlist = list(p32, p33, p34, p35, p36, p37, p38, p39), ncol = 2, align = "vh")
-  ggsave(filename = paste0(plot_dir_sce, "/BGYk_estimated_across_replicates_x_subsce.pdf"), width = width[scenario$sub_sce_varying_par], height = 12+a)
+  ggsave(filename = paste0(plot_dir_sce, "/BGYk_estimated_across_replicates_x_subsce.pdf"), width = width[scenario$sub_sce_varying_par], height = 12)
   
   ## Plot true - hat BGYk
   p40 <- plot_metric_across_subscenarios(scenario, "diff_BGY1", "mean_diff_BGY1", T)
   p41 <- plot_metric_across_subscenarios(scenario, "diff_BGY2", "mean_diff_BGY2", T)
   
   plot_grid(plotlist = list(p40, p41), ncol = 2, align = "vh")
-  ggsave(filename = paste0(plot_dir_sce, "/diff_BGYk_across_replicates_x_subsce.pdf"), width = width[scenario$sub_sce_varying_par], height = 3+a)
-  
+  ggsave(filename = paste0(plot_dir_sce, "/diff_BGYk_across_replicates_x_subsce.pdf"), width = width[scenario$sub_sce_varying_par], height = 3)
   
   ## Plot estimated between-strata BGY difference and true vs estimated difference
   p42 <- plot_metric_across_subscenarios(scenario, "hat_diff_BGY", "mean_hat_diff_BGY", T)
@@ -383,7 +423,7 @@ for(scenario in scenarios){
   p45 <- plot_metric_across_subscenarios(scenario, "p_Z_diff_BGY", "PR_GxK_on_Y")
   
   plot_grid(plotlist = list(p42, p43, p44, p45), ncol = 2, align = "vh")
-  ggsave(filename = paste0(plot_dir_sce, "/between_strata_BGY_diff_across_replicates_x_subsce.pdf"), width = width[scenario$sub_sce_varying_par], height = 6+a)
+  ggsave(filename = paste0(plot_dir_sce, "/between_strata_BGY_diff_across_replicates_x_subsce.pdf"), width = width[scenario$sub_sce_varying_par], height = 6)
   
   ## Plot estimated BXYk 
   p46 <- plot_metric_across_subscenarios(scenario, "hat_BXY1", "mean_hat_BXY1", T)
@@ -399,7 +439,7 @@ for(scenario in scenarios){
   p53 <- plot_metric_across_subscenarios(scenario, "p_Z_diff_BXY", "PR_XxK_on_Y")
   
   plot_grid(plotlist = list(p46, p47, p48, p49, p50, p51, p52, p53), ncol = 2, align = "vh")
-  ggsave(filename = paste0(plot_dir_sce, "/BXYk_estimated_across_replicates_x_subsce.pdf"), width = width[scenario$sub_sce_varying_par], height = 12+a)
+  ggsave(filename = paste0(plot_dir_sce, "/BXYk_estimated_across_replicates_x_subsce.pdf"), width = width[scenario$sub_sce_varying_par], height = 12)
   
 }
 
@@ -409,8 +449,65 @@ for(scenario in scenarios){
 
 
 
+## Reproducibility info
+session_info()
 
-
-
+# ─ Session info ──────────────────────────────────────────────────────────────────────
+# setting  value
+# version  R version 4.5.1 (2025-06-13)
+# os       Ubuntu 22.04.5 LTS
+# system   x86_64, linux-gnu
+# ui       RStudio
+# language (EN)
+# collate  en_GB.UTF-8
+# ctype    en_GB.UTF-8
+# tz       Europe/London
+# date     2025-10-10
+# rstudio  2024.12.1+563 Kousa Dogwood (server)
+# pandoc   NA
+# quarto   1.6.42 @ /usr/local/bin/quarto
+# 
+# ─ Packages ──────────────────────────────────────────────────────────────────────────
+# package      * version date (UTC) lib source
+# cli            3.6.5   2025-04-23 [1] CRAN (R 4.5.1)
+# cowplot      * 1.2.0   2025-07-07 [1] CRAN (R 4.5.1)
+# dichromat      2.0-0.1 2022-05-02 [1] CRAN (R 4.5.1)
+# dplyr        * 1.1.4   2023-11-17 [1] CRAN (R 4.5.1)
+# farver         2.1.2   2024-05-13 [1] CRAN (R 4.5.1)
+# generics       0.1.4   2025-05-09 [1] CRAN (R 4.5.1)
+# ggplot2      * 4.0.0   2025-09-11 [1] CRAN (R 4.5.1)
+# glue           1.8.0   2024-09-30 [1] CRAN (R 4.5.1)
+# gtable         0.3.6   2024-10-25 [1] CRAN (R 4.5.1)
+# labeling       0.4.3   2023-08-29 [1] CRAN (R 4.5.1)
+# lifecycle      1.0.4   2023-11-07 [1] CRAN (R 4.5.1)
+# magrittr       2.0.4   2025-09-12 [1] CRAN (R 4.5.1)
+# pillar         1.11.1  2025-09-17 [1] CRAN (R 4.5.1)
+# pkgconfig      2.0.3   2019-09-22 [1] CRAN (R 4.5.1)
+# purrr          1.1.0   2025-07-10 [1] CRAN (R 4.5.1)
+# R6             2.6.1   2025-02-15 [1] CRAN (R 4.5.1)
+# ragg           1.5.0   2025-09-02 [1] CRAN (R 4.5.1)
+# RColorBrewer   1.1-3   2022-04-03 [1] CRAN (R 4.5.1)
+# rlang          1.1.6   2025-04-11 [1] CRAN (R 4.5.1)
+# rstudioapi     0.17.1  2024-10-22 [1] CRAN (R 4.5.1)
+# S7             0.2.0   2024-11-07 [1] CRAN (R 4.5.1)
+# scales         1.4.0   2025-04-24 [1] CRAN (R 4.5.1)
+# sessioninfo  * 1.2.3   2025-02-05 [1] CRAN (R 4.5.1)
+# stringi        1.8.7   2025-03-27 [1] CRAN (R 4.5.1)
+# stringr        1.5.2   2025-09-08 [1] CRAN (R 4.5.1)
+# systemfonts    1.2.3   2025-04-30 [1] CRAN (R 4.5.1)
+# textshaping    1.0.3   2025-09-02 [1] CRAN (R 4.5.1)
+# tibble         3.3.0   2025-06-08 [1] CRAN (R 4.5.1)
+# tidyr        * 1.3.1   2024-01-24 [1] CRAN (R 4.5.1)
+# tidyselect     1.2.1   2024-03-11 [1] CRAN (R 4.5.1)
+# vctrs          0.6.5   2023-12-01 [1] CRAN (R 4.5.1)
+# withr          3.0.2   2024-10-28 [1] CRAN (R 4.5.1)
+# 
+# [1] /home/daianna/R/x86_64-pc-linux-gnu-library/4.5
+# [2] /usr/local/lib/R/site-library
+# [3] /usr/lib/R/site-library
+# [4] /usr/lib/R/library
+# * ── Packages attached to the search path.
+# 
+# ─────────────────────────────────────────────────────────────────────────────────────
 
 

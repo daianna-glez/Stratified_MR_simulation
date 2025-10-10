@@ -611,10 +611,10 @@ simulation_indiv_data_1IV <- function(main_scenario, main_scenario_val, sub_sce_
 # ---------------   Main script   ---------------  
 ## (uncomment according to main scenario simulations run)
 ## All 00 scenarios 
-scenarios <- get(load(paste0(input_dir00, "/scenario.00.Rdata")))
+# scenarios <- get(load(paste0(input_dir00, "/scenario.00.Rdata")))
 
 ## All 01 scenarios
-# scenarios <- get(load(paste0(input_dir00, "/scenario.01.Rdata")))
+scenarios <- get(load(paste0(input_dir00, "/scenario.01.Rdata")))
 
 
 ## 100 replicates x scenario
