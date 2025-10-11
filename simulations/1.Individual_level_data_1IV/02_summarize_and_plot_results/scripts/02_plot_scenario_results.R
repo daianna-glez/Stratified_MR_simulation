@@ -24,7 +24,7 @@ input_dir01 <- paste(getwd(), "simulations", "1.Individual_level_data_1IV", "01_
 
 ## Scenarios
 # all_scenarios <- get(load(paste0(input_dir00, "/scenario.00.Rdata")))
-all_scenarios <- get(load(paste0(input_dir00, "/scenario.01.Rdata")))[1:500,]
+all_scenarios <- get(load(paste0(input_dir00, "/scenario.01.Rdata")))[753:1128,]
 scenarios <- all_scenarios[, c("main_scenario", "main_scenario_val", "sub_sce_varying_par")] %>% unique()
 
 
@@ -115,15 +115,15 @@ plot_metric_across_subscenarios <- function(scenario, metric_y, metric_to_show, 
   }
   
   var_labs = list("N" = "Increasing N", 
-                "r" = "Ratio of stratum sample sizes N1/N2", 
-                "BGX1" = expression(beta[GX[1]]),
-                "BXY1" = expression(beta[XY[1]]), 
-                "BUX_BUY" = expression(beta[UX]*" = "*beta[UY]), 
-                "q1_q2" = expression(q[1]*", "*q[2]),
-                "diff_BGX" = expression(Delta*beta[GX]),
-                "diff_BXY" = expression(Delta*beta[XY]), 
-                "N_r" = expression(N*", "*r), 
-                "N_q1_q2" = expression(N*", "*q[1]*", "*q[2]))
+                  "r" = "Ratio of stratum sample sizes N1/N2", 
+                  "BGX1" = expression(beta[GX[1]]),
+                  "BXY1" = expression(beta[XY[1]]), 
+                  "BUX_BUY" = expression(beta[UX]*" = "*beta[UY]), 
+                  "q1_q2" = expression(q[1]*", "*q[2]),
+                  "diff_BGX" = expression(Delta*beta[GX]),
+                  "diff_BXY" = expression(Delta*beta[XY]), 
+                  "N_r" = expression(N*", "*r), 
+                  "N_q1_q2" = expression(N*", "*q[1]*", "*q[2]))
   
   metric_to_show_lab = c("mean_q1_ob" = expression(bar(q)[ob1]*":"), 
                          "mean_q2_ob" = expression(bar(q)[ob2]*":"),
@@ -166,58 +166,64 @@ plot_metric_across_subscenarios <- function(scenario, metric_y, metric_to_show, 
   ) 
   
   yvar_labels = list("n_aa_1" = "aa count in stratum 1",
-                        "n_aA_1" = "aA count in stratum 1",
-                        "n_AA_1" = "AA count in stratum 1",
-                        "n_aa_2" = "aa count in stratum 2",
-                        "n_aA_2" = "aA count in stratum 2",
-                        "n_AA_2" = "AA count in stratum 2",
-                        "HWE_P_1" = "P-value for HWE in stratum 1",
-                        "HWE_P_2" = "P-value for HWE in stratum 2", 
-                        "HWE_P_global" = "P-value for HWE in both strata", 
-                        "HWE_CHISQ_1" = expression(chi**2*" statistic for HWE in stratum 1"),
-                        "HWE_CHISQ_2" = expression(chi**2*" statistic for HWE in stratum 2"),
-                        "HWE_CHISQ_global" = expression(chi**2*" statistic for HWE in both strata"),
-                        "q1_ob" = "Observed MAF in stratum 1",
-                        "q2_ob" = "Observed MAF in stratum 2",
-                        "q_global_ob" = "Observed MAF in both strata",
-                        "hat_BGX1" = expression(hat(beta[GX[1]])), 
-                        "hat_BGX2" = expression(hat(beta[GX[2]])), 
-                        "se_hat_BGX1" = expression(se(hat(beta[GX[1]]))), 
-                        "se_hat_BGX2" = expression(se(hat(beta[GX[2]]))), 
-                        "BGX_t_stat_1" = expression(t[hat(beta[GX[1]])]), 
-                        "BGX_t_stat_2" = expression(t[hat(beta[GX[2]])]), 
-                        "BGX_P_1" = expression(p[hat(beta[GX[1]])]), 
-                        "BGX_P_2" = expression(p[hat(beta[GX[2]])]), 
-                        "BGX_F_stat_1" = expression(F[hat(beta[GX[1]])]), 
-                        "BGX_F_stat_2" = expression(F[hat(beta[GX[2]])]), 
-                        "diff_BGX1" = expression(Delta*beta[GX[1]] == abs(beta[GX[1]] - hat(beta[GX[1]]))),
-                        "diff_BGX2" = expression(Delta*beta[GX[2]] == abs(beta[GX[2]] - hat(beta[GX[2]]))),
-                        "hat_diff_BGX" = expression(Delta*hat(beta[GX]) == hat(beta[GX[2]]) - hat(beta[GX[1]])), 
-                        "diff_diff_BGX" = expression(Delta[Delta*beta[GX]] == abs(Delta*beta[GX] - Delta*hat(beta[GX]))),
-                        "Z_diff_BGX" = expression(Z[Delta*beta[GX]]),
-                        "p_Z_diff_BGX" = expression(p[Z[Delta*beta[GX]]]),
-                        "hat_BGY1" = expression(hat(beta[GY[1]])),                
-                        "hat_BGY2" = expression(hat(beta[GY[2]])),                      
-                        "se_hat_BGY1" = expression(se(hat(beta[GY[1]]))),             
-                        "se_hat_BGY2" = expression(se(hat(beta[GY[2]]))),              
-                        "BGY_t_stat_1" = expression(t[hat(beta[GY[1]])]),              
-                        "BGY_t_stat_2" = expression(t[hat(beta[GY[2]])]),             
-                        "BGY_P_1" = expression(p[hat(beta[GY[1]])]),                   
-                        "BGY_P_2" = expression(p[hat(beta[GY[2]])]),         
-                        "diff_BGY1" = expression(Delta*beta[GY[1]] == abs(beta[GY[1]] - hat(beta[GY[1]]))),                    
-                        "diff_BGY2" = expression(Delta*beta[GY[2]] == abs(beta[GY[2]] - hat(beta[GY[2]]))),   
-                        "hat_diff_BGY" = expression(Delta*hat(beta[GY]) == hat(beta[GY[2]]) - hat(beta[GY[1]])),             
-                        "diff_diff_BGY" = expression(Delta[Delta*beta[GY]] == abs(Delta*beta[GY] - Delta*hat(beta[GY]))),
-                        "Z_diff_BGY" = expression(Z[Delta*beta[GY]]),       
-                        "p_Z_diff_BGY" = expression(p[Z[Delta*beta[GY]]]),      
-                        "hat_BXY1" = expression(hat(beta[XY[1]])),           
-                        "hat_BXY2" = expression(hat(beta[XY[2]])),           
-                        "diff_BXY1" = expression(Delta*beta[XY[1]] == abs(beta[XY[1]] - hat(beta[XY[1]]))),                 
-                        "diff_BXY2" = expression(Delta*beta[XY[2]] == abs(beta[XY[2]] - hat(beta[XY[2]]))),  
-                        "hat_diff_BXY" = expression(Delta*hat(beta[XY]) == hat(beta[XY[2]]) - hat(beta[XY[1]])),                      
-                        "diff_diff_BXY" = expression(Delta[Delta*beta[XY]] == abs(Delta*beta[XY] - Delta*hat(beta[XY]))),
-                        "Z_diff_BXY" = expression(Z[Delta*beta[XY]]),       
-                        "p_Z_diff_BXY" = expression(p[Z[Delta*beta[XY]]])
+                      "n_aA_1" = "aA count in stratum 1",
+                      "n_AA_1" = "AA count in stratum 1",
+                      "n_aa_2" = "aa count in stratum 2",
+                      "n_aA_2" = "aA count in stratum 2",
+                      "n_AA_2" = "AA count in stratum 2",
+                      "HWE_P_1" = "P-value for HWE in stratum 1",
+                      "HWE_P_2" = "P-value for HWE in stratum 2", 
+                      "HWE_P_global" = "P-value for HWE in both strata", 
+                      "HWE_CHISQ_1" = expression(chi**2*" statistic for HWE in stratum 1"),
+                      "HWE_CHISQ_2" = expression(chi**2*" statistic for HWE in stratum 2"),
+                      "HWE_CHISQ_global" = expression(chi**2*" statistic for HWE in both strata"),
+                      "q1_ob" = "Observed MAF in stratum 1",
+                      "q2_ob" = "Observed MAF in stratum 2",
+                      "q_global_ob" = "Observed MAF in both strata",
+                      "hat_BGX1" = expression(hat(beta[GX[1]])), 
+                      "hat_BGX2" = expression(hat(beta[GX[2]])), 
+                      "se_hat_BGX1" = expression(se(hat(beta[GX[1]]))), 
+                      "se_hat_BGX2" = expression(se(hat(beta[GX[2]]))), 
+                      "BGX_t_stat_1" = expression(t[hat(beta[GX[1]])]), 
+                      "BGX_t_stat_2" = expression(t[hat(beta[GX[2]])]), 
+                      "BGX_P_1" = expression(p[hat(beta[GX[1]])]), 
+                      "BGX_P_2" = expression(p[hat(beta[GX[2]])]), 
+                      "BGX_F_stat_1" = expression(F[hat(beta[GX[1]])]), 
+                      "BGX_F_stat_2" = expression(F[hat(beta[GX[2]])]), 
+                      "diff_BGX1" = expression(Delta*beta[GX[1]] == abs(beta[GX[1]] - hat(beta[GX[1]]))),
+                      "diff_BGX2" = expression(Delta*beta[GX[2]] == abs(beta[GX[2]] - hat(beta[GX[2]]))),
+                      "hat_diff_BGX" = expression(Delta*hat(beta[GX]) == hat(beta[GX[2]]) - hat(beta[GX[1]])), 
+                      "diff_diff_BGX" = expression(Delta[Delta*beta[GX]] == abs(Delta*beta[GX] - Delta*hat(beta[GX]))),
+                      "Z_diff_BGX" = expression(Z[Delta*beta[GX]]),
+                      "p_Z_diff_BGX" = expression(p[Z[Delta*beta[GX]]]),
+                      "hat_BGY1" = expression(hat(beta[GY[1]])),                
+                      "hat_BGY2" = expression(hat(beta[GY[2]])),                      
+                      "se_hat_BGY1" = expression(se(hat(beta[GY[1]]))),             
+                      "se_hat_BGY2" = expression(se(hat(beta[GY[2]]))),              
+                      "BGY_t_stat_1" = expression(t[hat(beta[GY[1]])]),              
+                      "BGY_t_stat_2" = expression(t[hat(beta[GY[2]])]),             
+                      "BGY_P_1" = expression(p[hat(beta[GY[1]])]),                   
+                      "BGY_P_2" = expression(p[hat(beta[GY[2]])]),         
+                      "diff_BGY1" = expression(Delta*beta[GY[1]] == abs(beta[GY[1]] - hat(beta[GY[1]]))),                    
+                      "diff_BGY2" = expression(Delta*beta[GY[2]] == abs(beta[GY[2]] - hat(beta[GY[2]]))),   
+                      "hat_diff_BGY" = expression(Delta*hat(beta[GY]) == hat(beta[GY[2]]) - hat(beta[GY[1]])),             
+                      "diff_diff_BGY" = expression(Delta[Delta*beta[GY]] == abs(Delta*beta[GY] - Delta*hat(beta[GY]))),
+                      "Z_diff_BGY" = expression(Z[Delta*beta[GY]]),       
+                      "p_Z_diff_BGY" = expression(p[Z[Delta*beta[GY]]]),      
+                      "hat_BXY1" = expression(hat(beta[XY[1]])),           
+                      "hat_BXY2" = expression(hat(beta[XY[2]])),  
+                      "se_hat_BXY1" = expression(se(hat(beta[XY[1]]))),             
+                      "se_hat_BXY2" = expression(se(hat(beta[XY[2]]))),  
+                      "se_hat_BXY1_2nd" = expression(se(hat(beta[XY[1]]))[2*"nd"]),             
+                      "se_hat_BXY2_2nd" = expression(se(hat(beta[XY[2]]))[2*"nd"]),  
+                      "diff_BXY1" = expression(Delta*beta[XY[1]] == abs(beta[XY[1]] - hat(beta[XY[1]]))),                 
+                      "diff_BXY2" = expression(Delta*beta[XY[2]] == abs(beta[XY[2]] - hat(beta[XY[2]]))),  
+                      "hat_diff_BXY" = expression(Delta*hat(beta[XY]) == hat(beta[XY[2]]) - hat(beta[XY[1]])),                      
+                      "diff_diff_BXY" = expression(Delta[Delta*beta[XY]] == abs(Delta*beta[XY] - Delta*hat(beta[XY]))),
+                      "Z_diff_BXY" = expression(Z[Delta*beta[XY]]),       
+                      "p_Z_diff_BXY" = expression(p[Z[Delta*beta[XY]]]),
+                      "Z_diff_BXY_2nd" = expression(Z[Delta*beta[XY]*2*"nd"]),       
+                      "p_Z_diff_BXY_2nd" = expression(p[Z[Delta*beta[XY]]*2*"nd"])
   )
   
   # if(metric_y %in% c("BGX_P_1", "BGX_P_2", "BGY_P_1", "BGY_P_2")){
@@ -282,7 +288,7 @@ plot_metric_across_subscenarios <- function(scenario, metric_y, metric_to_show, 
   
   ## To show yline
   if(metric_y %in% c("HWE_P_1", "HWE_P_2", "HWE_P_global", "BGX_P_1", "BGX_P_2", "p_Z_diff_BGX", 
-                     "BGY_P_1", "BGY_P_2", "p_Z_diff_BGY", "p_Z_diff_BXY")){yintercept = 0.05} 
+                     "BGY_P_1", "BGY_P_2", "p_Z_diff_BGY", "p_Z_diff_BXY", "p_Z_diff_BXY_2nd")){yintercept = 0.05} 
   else if(metric_y == "q1_ob"){yintercept = unique(all_res$q1)}
   else if(metric_y == "q2_ob"){yintercept = unique(all_res$q2)}
   else if(metric_y == "hat_BGX1"){yintercept = unique(all_res$BGX1)}
@@ -316,9 +322,9 @@ plot_metric_across_subscenarios <- function(scenario, metric_y, metric_to_show, 
 
 
 ## Plot metrics across replicates, across subscenarios
-for(scenario in scenarios){
+for(i in 1:nrow(scenarios)){
   
-  scenario <- scenarios[2, ]
+  scenario <- scenarios[i, ]
   plot_dir_sce <- paste(plot_dir, paste(scenario, collapse = "/"), sep = "/")
   dir.create(plot_dir_sce, recursive = T, showWarnings = F)
   width <- c("N" = 17, "r" = 17, "q1_q2" = 22, "BGX1" = 17, "BXY1" = 17, "BUX_BUY" = 17, 
@@ -427,15 +433,27 @@ for(scenario in scenarios){
   ## Plot true - estimated BXYk 
   p48 <- plot_metric_across_subscenarios(scenario, "diff_BXY1", "mean_diff_BXY1", T)
   p49 <- plot_metric_across_subscenarios(scenario, "diff_BXY2", "mean_diff_BXY2", T)
-  ## Plot estimated between-strata BXY diff and true vs estimated diff
-  p50 <- plot_metric_across_subscenarios(scenario, "hat_diff_BXY", "mean_hat_diff_BXY", T)
-  p51 <- plot_metric_across_subscenarios(scenario, "diff_diff_BXY", "mean_diff_diff_BXY", T)
-  
-  p52 <- plot_metric_across_subscenarios(scenario, "Z_diff_BXY", "PR_XxK_on_Y", T)
-  p53 <- plot_metric_across_subscenarios(scenario, "p_Z_diff_BXY", "PR_XxK_on_Y")
+  ## Plot estimated BXYk se's
+  p50 <- plot_metric_across_subscenarios(scenario, "se_hat_BXY1", "mean_hat_BXY1", T)
+  p51 <- plot_metric_across_subscenarios(scenario, "se_hat_BXY2", "mean_hat_BXY2", T)
+  p52 <- plot_metric_across_subscenarios(scenario, "se_hat_BXY1_2nd", "mean_hat_BXY1", T)
+  p53 <- plot_metric_across_subscenarios(scenario, "se_hat_BXY2_2nd", "mean_hat_BXY2", T)
   
   plot_grid(plotlist = list(p46, p47, p48, p49, p50, p51, p52, p53), ncol = 2, align = "vh")
   ggsave(filename = paste0(plot_dir_sce, "/BXYk_estimated_across_replicates_x_subsce.pdf"), width = width[scenario$sub_sce_varying_par], height = 12)
+  
+  
+  ## Plot estimated between-strata BXY diff and true vs estimated diff
+  p54 <- plot_metric_across_subscenarios(scenario, "hat_diff_BXY", "mean_hat_diff_BXY", T)
+  p55 <- plot_metric_across_subscenarios(scenario, "diff_diff_BXY", "mean_diff_diff_BXY", T)
+  ## Plot Z score and P val for diff
+  p56 <- plot_metric_across_subscenarios(scenario, "Z_diff_BXY", "PR_XxK_on_Y", T)
+  p57 <- plot_metric_across_subscenarios(scenario, "p_Z_diff_BXY", "PR_XxK_on_Y")
+  p58 <- plot_metric_across_subscenarios(scenario, "Z_diff_BXY_2nd", "PR_XxK_on_Y_2nd", T)
+  p59 <- plot_metric_across_subscenarios(scenario, "p_Z_diff_BXY_2nd", "PR_XxK_on_Y_2nd")
+  
+  plot_grid(plotlist = list(p54, p55, p56, p57, p58, p59), ncol = 2, align = "vh")
+  ggsave(filename = paste0(plot_dir_sce, "/between_strata_BXY_diff_across_replicates_x_subsce.pdf"), width = width[scenario$sub_sce_varying_par], height = 9)
   
 }
 
