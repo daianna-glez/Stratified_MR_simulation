@@ -30,7 +30,7 @@ input_dir01 <- paste(getwd(), "simulations", "1.Individual_level_data_1IV", "01_
 
 ## Scenarios
 # all_scenarios <- get(load(paste0(input_dir00, "/scenario.00.Rdata")))
-all_scenarios <- get(load(paste0(input_dir00, "/scenario.01.Rdata")))[1:1128,]
+all_scenarios <- get(load(paste0(input_dir00, "/scenario.01.Rdata")))[1881:2632,]
 scenarios <- all_scenarios[, c("main_scenario", "main_scenario_val", "sub_sce_varying_par")] %>% unique()
 sub_scenarios <- all_scenarios[, c("main_scenario", "main_scenario_val", "sub_sce_varying_par","sub_sce_varying_par_value")]
 
