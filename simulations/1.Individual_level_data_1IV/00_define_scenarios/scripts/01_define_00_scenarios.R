@@ -33,7 +33,7 @@ dir.create(plot_dir, recursive = T, showWarnings = F)
 
 
 # ================================================================================================
-#  1. Scenario 00: No genetic effect difference Δβɢx = 0 and no causal effect difference Δβxʏ = 0 
+#  1. Scenario 0,0: No genetic effect difference Δβɢx = 0 and no causal effect difference Δβxʏ = 0 
 # ================================================================================================
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 

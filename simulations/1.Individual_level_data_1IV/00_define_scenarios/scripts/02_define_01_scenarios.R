@@ -7,7 +7,7 @@ rm(list = ls())
 
 
 # ==============================================================================================
-#  2. Scenario 01: No genetic effect difference Δβɢx = 0 and causal effect difference Δβxʏ ≠ 0 
+#  2. Scenario 0,1: No genetic effect difference Δβɢx = 0 and causal effect difference Δβxʏ ≠ 0 
 # ==============================================================================================
 
 ## Define dirs
@@ -24,7 +24,7 @@ diff_BXYs = seq(from = -1.7, to = 1.3, by = 0.5)
 # Δβxʏ = {-1.7  -1.2  -0.7  -0.2  0.3  0.8  1.3} -> βxʏ₂ = {-1.0  -0.5  0.0  0.5  1.0  1.5  2.0} (base case)
 
 
-## Same scenarios as in 00 but multiplied for each Δβxʏ 
+## Same scenarios as in 00 for each Δβxʏ 
 load(paste0(out_dir, "/scenario.00.Rdata"), verbose = T)
 # Loading objects:
 #   scenarios00
