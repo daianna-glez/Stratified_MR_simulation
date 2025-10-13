@@ -10,7 +10,7 @@ PARAM_FILE="../../00_define_scenarios/outputs/scenario.01.csv"
 
 n=$(cat  $PARAM_FILE | wc -l)
 
-for i in $(seq 1 1)
+for i in $(seq 1 $n)
 do
 
 # Row for scenario

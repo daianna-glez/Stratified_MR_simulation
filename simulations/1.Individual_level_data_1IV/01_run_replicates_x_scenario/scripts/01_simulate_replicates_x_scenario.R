@@ -574,15 +574,29 @@ simulation_indiv_data_1IV <- function(main_scenario, main_scenario_val, sub_sce_
   se_hat_BXY1 <- se_hat_BGY1 / abs(hat_BGX1)
   se_hat_BXY2 <- se_hat_BGY2 / abs(hat_BGX2)
   
+  ## Second order from delta expansion for ratio se:
+  # se(β̂xʏₖ) =  √ (se(β̂ɢʏₖ)² / β̂ɢxₖ²) + (β̂ɢʏₖ²*se(β̂ɢxₖ)² / β̂ɢxₖ⁴)
+  # se_hat_BXY1_2nd <- sqrt((se_hat_BGY1^2 / hat_BGX1^2) + ((hat_BGY1^2)*(se_hat_BGX1^2) / (hat_BGX1^4)))
+  # se_hat_BXY2_2nd <- sqrt((se_hat_BGY2^2 / hat_BGX2^2) + ((hat_BGY2^2)*(se_hat_BGX2^2) / (hat_BGX2^4)))
+  
   # Z-stat = (β̂xʏ₂ - β̂xʏ₁) / √se(β̂xʏ₂)² + se(β̂xʏ₁)²
   Z_diff_BXY = (hat_BXY2 - hat_BXY1) / sqrt((se_hat_BXY2^2) + (se_hat_BXY1^2))
   # P val: Z-stat ~ N(0,1) | Ho
   p_Z_diff_BXY = 2*pnorm(abs(Z_diff_BXY), 0, 1, lower.tail = F)
 
+  ## Z-stat and P val based on 2nd order se:
+  # Z_diff_BXY_2nd = (hat_BXY2 - hat_BXY1) / sqrt((se_hat_BXY2_2nd^2) + (se_hat_BXY1_2nd^2))
+  # p_Z_diff_BXY_2nd = 2*pnorm(abs(Z_diff_BXY_2nd), 0, 1, lower.tail = F)
+  
   out <- cbind(out, "se_hat_BXY1" = se_hat_BXY1, 
                     "se_hat_BXY2" = se_hat_BXY2, 
                     "Z_diff_BXY" = Z_diff_BXY,
                     "p_Z_diff_BXY" = p_Z_diff_BXY)
+  
+  # out <- cbind(out, "se_hat_BXY1_2nd" = se_hat_BXY1_2nd, 
+  #                   "se_hat_BXY2_2nd" = se_hat_BXY2_2nd, 
+  #                   "Z_diff_BXY_2nd" = Z_diff_BXY_2nd,
+  #                   "p_Z_diff_BXY_2nd" = p_Z_diff_BXY_2nd)
   
   if(replicate == 1){
     

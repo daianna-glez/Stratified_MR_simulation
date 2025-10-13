@@ -22,11 +22,11 @@ plot_dir <- paste(getwd(), "simulations", "1.Individual_level_data_1IV", "02_sum
 input_dir00 <- paste(getwd(), "simulations", "1.Individual_level_data_1IV", "00_define_scenarios", "outputs", sep = "/")
 
 ## Scenarios
-all_scenarios00 <- get(load(paste0(input_dir00, "/scenario.00.Rdata")))
-scenarios00 <- all_scenarios00[, c("main_scenario", "main_scenario_val", "sub_sce_varying_par")] %>% unique()
+# all_scenarios00 <- get(load(paste0(input_dir00, "/scenario.00.Rdata")))
+# scenarios00 <- all_scenarios00[, c("main_scenario", "main_scenario_val", "sub_sce_varying_par")] %>% unique()
 
-# all_scenarios01 <- get(load(paste0(input_dir00, "/scenario.01.Rdata")))
-# scenarios01 <- all_scenarios01[, c("main_scenario", "main_scenario_val", "sub_sce_varying_par")] %>% unique()
+all_scenarios01 <- get(load(paste0(input_dir00, "/scenario.01.Rdata")))
+scenarios01 <- all_scenarios01[, c("main_scenario", "main_scenario_val", "sub_sce_varying_par")] %>% unique()
 
 
 
@@ -74,10 +74,10 @@ plot_PN_rate <- function(data, rate){
   NR_BGY1_pre <- if_else(unique(data$BGY1) == 0, "T", "F")
   NR_BGY2_pre <- if_else(unique(data$BGY2) == 0, "T", "F")
   PR_GxK_on_X_pre <- if_else(unique(data$diff_BGX) == 0, "F", "T")
-  PR_GxK_on_Y_pre <- if_else(unique(data$diff_BGY) == 0, "F", "T")
+  PR_GxK_on_Y_pre <- if_else(unique(data$diff_BGY) == 0, "F", "T") %>% unique()
   PR_XxK_on_Y_pre <- PR_XxK_on_Y_2nd_pre <- if_else(unique(data$diff_BXY) == 0, "F", "T")
   NR_GxK_on_X_pre <- if_else(unique(data$diff_BGX) == 0, "T", "F")
-  NR_GxK_on_Y_pre <- if_else(unique(data$diff_BGY) == 0, "T", "F")
+  NR_GxK_on_Y_pre <- if_else(unique(data$diff_BGY) == 0, "T", "F") %>% unique()
   NR_XxK_on_Y_pre <- NR_XxK_on_Y_2nd_pre <- if_else(unique(data$diff_BXY) == 0, "T", "F")
   
   tf <- c("TPR_BGX1" = '', 
@@ -166,6 +166,7 @@ plot_PN_rate <- function(data, rate){
     else if(unique(stringr::str_count(data$sub_sce_varying_par_value, "=")) == 3){
       
       if(grepl("^q1_q2", unique(data$sub_sce_varying_par))){
+        var1 = "q1_q2"
         data$x <- paste0(data$q1, ", ", data$q2)
         data$x <- factor(data$x, levels = unique(data$x))
         var2 <- gsub("q1_q2_", "", unique(data$sub_sce_varying_par))
@@ -218,10 +219,10 @@ rates = c("TPR_BGX1", "FNR_BGX1", "TPR_BGX2", "FNR_BGX2",
           "NR_GxK_on_X", "NR_GxK_on_Y", "NR_XxK_on_Y", "NR_XxK_on_Y_2nd")
 
 ## Plots x scenario
-for(i in 1:nrow(scenarios00)){
+for(i in 1:nrow(scenarios01)){
   
   ## Collect metrics
-  scenario <- scenarios00[i, ]
+  scenario <- scenarios01[i, ]
   plot_dir_sce <- paste(plot_dir, paste(scenario, collapse = "/"), sep = "/")
   width <- c("N" = 21, "r" = 15, "q1_q2" = 22, "BGX1" = 15, "BXY1" = 15, "BUX_BUY" = 15, 
              "N_r" = 20, "N_q1_q2" = 15, "N_BGX1" = 15, "N_BXY1" = 15, "r_q1_q2" = 15,
