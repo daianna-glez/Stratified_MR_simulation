@@ -387,7 +387,7 @@ simulation_indiv_data_1IV <- function(main_scenario, main_scenario_val, sub_sce_
   
   indiv_data <- cbind(indiv_data, "eX" = eX, "eY" = eY)
   
-  # Step 5: Generate exposure Xₖ = βɢxₖ(G) + U + εx
+  # Step 5: Generate exposure Xₖ = βɢxₖ(G) + βuxU + εx
   # ___________________________________________________________________
   ## Define βɢx₂
   BGX2 = BGX1 + diff_BGX
@@ -466,7 +466,7 @@ simulation_indiv_data_1IV <- function(main_scenario, main_scenario_val, sub_sce_
   
   # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
   
-  # Step 7: Generate outcome Yₖ = βxʏₖ(βɢxₖ)(G) + U + εʏ
+  # Step 7: Generate outcome Yₖ = βxʏₖ(βɢxₖG + βuxU) + βuʏU + εʏ
   # ___________________________________________________________________
   ## Define βxʏ₂
   BXY2 = BXY1 + diff_BXY
@@ -614,8 +614,8 @@ simulation_indiv_data_1IV <- function(main_scenario, main_scenario_val, sub_sce_
   
   # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
   
-  ## Save indiv data generated
-  save(indiv_data, file = paste0(out_dir_sc, "/indiv_data_rep", replicate, ".Rdata"))
+  ## Save indiv data generated (if you want to fill BSU Server!!)
+  ## save(indiv_data, file = paste0(out_dir_sc, "/indiv_data_rep", replicate, ".Rdata"))
   
   return(out)
 }
@@ -624,11 +624,15 @@ simulation_indiv_data_1IV <- function(main_scenario, main_scenario_val, sub_sce_
 
 # ---------------   Main script   ---------------  
 ## (uncomment according to main scenario simulations run)
-## All 00 scenarios 
+## All 0,0 scenarios 
 # scenarios <- get(load(paste0(input_dir00, "/scenario.00.Rdata")))
 
-## All 01 scenarios
-scenarios <- get(load(paste0(input_dir00, "/scenario.01.Rdata")))
+## All 0,1 scenarios
+# scenarios <- get(load(paste0(input_dir00, "/scenario.01.Rdata")))
+
+## All 1,0 scenarios
+scenarios <- get(load(paste0(input_dir00, "/scenario.10.Rdata")))
+
 
 
 ## 100 replicates x scenario
