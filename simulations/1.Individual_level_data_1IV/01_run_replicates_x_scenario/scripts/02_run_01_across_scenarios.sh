@@ -6,7 +6,8 @@
 
 # All scenarios (uncomment according to main scenario run)
 # PARAM_FILE="../../00_define_scenarios/outputs/scenario.00.csv"
-PARAM_FILE="../../00_define_scenarios/outputs/scenario.01.csv"
+# PARAM_FILE="../../00_define_scenarios/outputs/scenario.01.csv"
+PARAM_FILE="../../00_define_scenarios/outputs/scenario.10.csv"
 
 n=$(cat  $PARAM_FILE | wc -l)
 
