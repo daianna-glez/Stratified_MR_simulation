@@ -454,6 +454,7 @@ and <span class="math inline">\(\beta_{XY1}\)</span> = {0.0, 0.3, 0.6,
 (i.e. type I error rate) in the genetic effect on the exposure and the
 exposure effect on the outcome, across the 16 varying parameter(s)
 subscenarios presented above.</p>
+<p>In total, 896 subscenarios were explored.</p>
 <p><strong>Scenario 0,1</strong>: <span class="math inline">\(\Delta{\beta_{GX}}= 0, \Delta{\beta_{XY}}≠
 0\)</span></p>
 <p>Defined in <a href="/simulations/1.Individual_level_data_1IV/00_define_scenarios/scripts/02_define_01_scenarios.R"><code>scripts/02_define_01_scenarios.R</code></a>.</p>
@@ -496,7 +497,6 @@ the outcome, for each combination of <span class="math inline">\(\Delta\beta_{GX
 1.4} and <span class="math inline">\(\Delta\beta_{XY}\)</span> = {-1.7
 -1.2 -0.7 -0.2 0.3 0.8 1.3}, each, across the 16 subscenarios presented
 above.</p>
-<p>In total, 896 subscenarios were explored.</p>
 </div>
 <div id="run-simulation-replicates-per-subscenario" class="section level3">
 <h3>1. Run simulation replicates per subscenario</h3>
@@ -508,9 +508,9 @@ folder.</p>
 modelled genotypes <span class="math inline">\(G\)</span> and a
 continuous exposure <span class="math inline">\(X\)</span> and outcome
 <span class="math inline">\(Y\)</span> for unrelated individuals across
-the strata of a dichotomous stratifying variable K <span class="math inline">\(=k\in\)</span> {1,2}, genetic associations with
-<span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span> were tested and causal effects
-estimated in <a href="/01_run_replicates_x_scenario/scripts/01_simulate_replicates_x_scenario.R"><code>scripts/01_simulate_replicates_x_scenario.R</code></a>
+the strata of a dichotomous stratifying variable K <span class="math inline">\(=k\in\)</span> {1,2}; genetic associations with
+<span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span> were tested, and causal effects
+estimated in <a href="/simulations/1.Individual_level_data_1IV/01_run_replicates_x_scenario/scripts/01_simulate_replicates_x_scenario.R"><code>scripts/01_simulate_replicates_x_scenario.R</code></a>
 for 100 replicates. Per-subscenario replicates were run with <a href="/simulations/1.Individual_level_data_1IV/01_run_replicates_x_scenario/scripts/02_run_01_across_scenarios.R"><code>scripts/02_run_01_across_scenarios.R</code></a>
 taking each subscenario parameters from <a href="/00_define_scenarios/outputs/"><code>00_define_scenarios/outputs</code></a>.
 This was run separately for all subscenarios of each main scenario (0,0,

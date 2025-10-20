@@ -58,6 +58,9 @@ Defined in [`scripts/01_define_00_scenarios.R`](/simulations/1.Individual_level_
 
 Assess the rate of falsely detected between-strata differences (i.e. type I error rate) in the genetic effect on the exposure and the exposure effect on the outcome, across the 16 varying parameter(s) subscenarios presented above.
 
+In total, 896 subscenarios were explored.
+
+
 **Scenario 0,1**: $\Delta{\beta_{GX}}= 0, \Delta{\beta_{XY}}≠ 0$
 
 Defined in [`scripts/02_define_01_scenarios.R`](/simulations/1.Individual_level_data_1IV/00_define_scenarios/scripts/02_define_01_scenarios.R).
@@ -95,7 +98,6 @@ Defined in [`scripts/04_define_11_scenarios.R`](/simulations/1.Individual_level_
 
 Assess the rate of truly detected between-strata differences in the genetic effect on the exposure and the causal effect of the exposure on the outcome, for each combination of $\Delta\beta_{GX}$  = {-0.6  -0.2  0.2  0.6  1.0  1.4} and $\Delta\beta_{XY}$  = {-1.7  -1.2  -0.7  -0.2  0.3  0.8  1.3}, each, across the 16 subscenarios presented above.
 
-In total, 896 subscenarios were explored.
 
 
 
@@ -106,8 +108,8 @@ In total, 896 subscenarios were explored.
 
 **Simulation framework** 
 
-According to each subscenario parameters, we simulated additively modelled genotypes $G$ and a continuous exposure $X$ and outcome $Y$ for unrelated individuals across the strata of a dichotomous stratifying variable K $=k\in$ {1,2}, genetic associations with $X$ and $Y$ were tested and causal effects estimated in [`scripts/01_simulate_replicates_x_scenario.R`](/01_run_replicates_x_scenario/scripts/01_simulate_replicates_x_scenario.R) for 100 replicates. 
-Per-subscenario replicates were run with [`scripts/02_run_01_across_scenarios.R`](/simulations/1.Individual_level_data_1IV/01_run_replicates_x_scenario/scripts/02_run_01_across_scenarios.R) taking each subscenario parameters from [`00_define_scenarios/outputs`](/00_define_scenarios/outputs/). This was run separately for all subscenarios of each main scenario (0,0, 0,1, 1,0, and 1,1).  
+According to each subscenario parameters, we simulated additively modelled genotypes $G$ and a continuous exposure $X$ and outcome $Y$ for unrelated individuals across the strata of a dichotomous stratifying variable K $=k\in$ {1,2}; genetic associations with $X$ and $Y$ were tested, and causal effects estimated in [`scripts/01_simulate_replicates_x_scenario.R`](/simulations/1.Individual_level_data_1IV/01_run_replicates_x_scenario/scripts/01_simulate_replicates_x_scenario.R) for 100 replicates. 
+Per-subscenario replicates were run with [`scripts/02_run_01_across_scenarios.R`](/simulations/1.Individual_level_data_1IV/01_run_replicates_x_scenario/scripts/02_run_01_across_scenarios.R) taking each subscenario parameters from [`00_define_scenarios/outputs`](/simulations/1.Individual_level_data_1IV/00_define_scenarios/outputs/). This was run separately for all subscenarios of each main scenario (0,0, 0,1, 1,0, and 1,1).  
 
 For each replicate $i = 1,...,100$ of a subscenario we:
 
