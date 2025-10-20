@@ -511,8 +511,8 @@ continuous exposure <span class="math inline">\(X\)</span> and outcome
 the strata of a dichotomous stratifying variable K <span class="math inline">\(=k\in\)</span> {1,2}; genetic associations with
 <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span> were tested, and causal effects
 estimated in <a href="/simulations/1.Individual_level_data_1IV/01_run_replicates_x_scenario/scripts/01_simulate_replicates_x_scenario.R"><code>scripts/01_simulate_replicates_x_scenario.R</code></a>
-for 100 replicates. Per-subscenario replicates were run with <a href="/simulations/1.Individual_level_data_1IV/01_run_replicates_x_scenario/scripts/02_run_01_across_scenarios.R"><code>scripts/02_run_01_across_scenarios.R</code></a>
-taking each subscenario parameters from <a href="/00_define_scenarios/outputs/"><code>00_define_scenarios/outputs</code></a>.
+for 100 replicates. Per-subscenario replicates were run with <a href="/simulations/1.Individual_level_data_1IV/01_run_replicates_x_scenario/scripts/02_run_01_across_scenarios.sh"><code>scripts/02_run_01_across_scenarios.sh</code></a>
+taking each subscenario parameters from <a href="/simulations/1.Individual_level_data_1IV/00_define_scenarios/outputs/"><code>00_define_scenarios/outputs</code></a>.
 This was run separately for all subscenarios of each main scenario (0,0,
 0,1, 1,0, and 1,1).</p>
 <p>For each replicate <span class="math inline">\(i = 1,...,100\)</span>
@@ -600,7 +600,7 @@ N(0,1)|H_0\)</span></li>
 strata: <span class="math inline">\(|{\Delta{\beta_{XY}}} -
 {\Delta\hat\beta_{XY}}|\)</span></li>
 <li>Standard error of estimated causal effect as the first order term
-from a delta method expansion: se(<span class="math inline">\(\hat\beta_{XYk}\)</span>) =<span class="math inline">\(\frac{se(\hat
+from a delta method expansion: se(<span class="math inline">\(\hat\beta_{XYk}\)</span>) = <span class="math inline">\(\frac{se(\hat
 \beta_{GY_k})}{\hat\beta_{GX_k}}\)</span></li>
 <li>Standard error of estimated causal effect using the second term of
 the delta expansion: se(<span class="math inline">\(\hat\beta_{XYk}\)</span>) = <span class="math inline">\(\sqrt{}\frac{se(\hat\beta_{GY_k})^2}{\hat\beta_{GX_k}^2}+\frac{\hat\beta_{GY_k}^2se(\hat\beta_{GX_k})^2}{\hat\beta_{GX_k}^4}\)</span></li>
@@ -720,7 +720,7 @@ strata</td>
 <td>Standard error for <span class="math inline">\(\hat\beta_{XYk}\)</span></td>
 </tr>
 <tr class="odd">
-<td>se(<span class="math inline">\({\hat\beta_{XYk}}\)</span>)<span class="math inline">\(^{2nd}\)</span></td>
+<td>se(<span class="math inline">\({\hat\beta_{XYk}}\)</span>) <span class="math inline">\(^{2nd}\)</span></td>
 <td>Standard error for <span class="math inline">\(\hat\beta_{XYk}\)</span> including second term
 from delta expansion method</td>
 </tr>
@@ -740,7 +740,7 @@ from delta expansion method</td>
 </tbody>
 </table>
 <p>The above per-replicate metrics were aggregated and summarized across
-all 100 replicates of a subscenario in <a href="/02_summarize_and_plot_results/scripts/01_summarize_scenario_results.R"><code>scripts/01_summarize_scenario_results.R</code></a>.
+all 100 replicates of a subscenario in <a href="/simulations/1.Individual_level_data_1IV/02_summarize_and_plot_results/scripts/01_summarize_scenario_results.R"><code>scripts/01_summarize_scenario_results.R</code></a>.
 Performance metrics considered across replicates were:</p>
 <ul>
 <li>Bias (mean error)</li>
@@ -749,7 +749,7 @@ Performance metrics considered across replicates were:</p>
 <li>Power</li>
 </ul>
 <p>Results across subscenarios of a varying parameter scenario were
-plotted in <a href="/simulations/1.Individual_level_data_1IV//02_summarize_and_plot_results/scripts/02_plot_scenario_results.R"><code>scripts/02_plot_scenario_results.R</code></a>
+plotted in <a href="/simulations/1.Individual_level_data_1IV/02_summarize_and_plot_results/scripts/02_plot_scenario_results.R"><code>scripts/02_plot_scenario_results.R</code></a>
 and <a href="/simulations/1.Individual_level_data_1IV/02_summarize_and_plot_results/scripts/03_plot_main_scenario_results.R"><code>scripts/03_plot_main_scenario_results.R</code></a>.</p>
 <hr />
 </div>

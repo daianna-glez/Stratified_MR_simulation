@@ -109,7 +109,7 @@ Assess the rate of truly detected between-strata differences in the genetic effe
 **Simulation framework** 
 
 According to each subscenario parameters, we simulated additively modelled genotypes $G$ and a continuous exposure $X$ and outcome $Y$ for unrelated individuals across the strata of a dichotomous stratifying variable K $=k\in$ {1,2}; genetic associations with $X$ and $Y$ were tested, and causal effects estimated in [`scripts/01_simulate_replicates_x_scenario.R`](/simulations/1.Individual_level_data_1IV/01_run_replicates_x_scenario/scripts/01_simulate_replicates_x_scenario.R) for 100 replicates. 
-Per-subscenario replicates were run with [`scripts/02_run_01_across_scenarios.R`](/simulations/1.Individual_level_data_1IV/01_run_replicates_x_scenario/scripts/02_run_01_across_scenarios.R) taking each subscenario parameters from [`00_define_scenarios/outputs`](/simulations/1.Individual_level_data_1IV/00_define_scenarios/outputs/). This was run separately for all subscenarios of each main scenario (0,0, 0,1, 1,0, and 1,1).  
+Per-subscenario replicates were run with [`scripts/02_run_01_across_scenarios.sh`](/simulations/1.Individual_level_data_1IV/01_run_replicates_x_scenario/scripts/02_run_01_across_scenarios.sh) taking each subscenario parameters from [`00_define_scenarios/outputs`](/simulations/1.Individual_level_data_1IV/00_define_scenarios/outputs/). This was run separately for all subscenarios of each main scenario (0,0, 0,1, 1,0, and 1,1).  
 
 For each replicate $i = 1,...,100$ of a subscenario we:
 
@@ -170,7 +170,7 @@ For each replicate $i = 1,...,100$ of a subscenario we:
 
       - Difference between true and estimated causal effect per stratum: $|{\beta_{XYk}} - {\hat\beta_{XYk}}|$
       - Difference between true vs estimated causal effect difference across strata:  $|{\Delta{\beta_{XY}}} - {\Delta\hat\beta_{XY}}|$
-      - Standard error of estimated causal effect as the first order term from a delta method expansion: se($\hat\beta_{XYk}$) =$\frac{se(\hat \beta_{GY_k})}{\hat\beta_{GX_k}}$
+      - Standard error of estimated causal effect as the first order term from a delta method expansion: se($\hat\beta_{XYk}$) = $\frac{se(\hat \beta_{GY_k})}{\hat\beta_{GX_k}}$
       - Standard error of estimated causal effect using the second term of the delta expansion: se($\hat\beta_{XYk}$) = $\sqrt{}\frac{se(\hat\beta_{GY_k})^2}{\hat\beta_{GX_k}^2}+\frac{\hat\beta_{GY_k}^2se(\hat\beta_{GX_k})^2}{\hat\beta_{GX_k}^4}$
       - Test significance of estimated difference: $Z_{\Delta\hat\beta_{XY}}=\frac{{\hat\beta_{XY2}} - {\hat\beta_{XY1}}}{\sqrt{se^2(\hat\beta_{XY2}) + se^2(\hat\beta_{XY1})}}$ with $Z \sim N(0,1)|H_0$
 
@@ -208,19 +208,19 @@ Each simulation run for a subscenario replicate yielded the following outputs of
 | $p_{Z_{\Delta\hat\beta_{GY}}}$ | *p*-value for $Z_{\Delta\hat\beta_{GY}}$ | 
 | $\hat\beta_{XYk}$ | Estimated causal effect in stratum $k$ |
 | se($\hat\beta_{XYk}$) | Standard error for $\hat\beta_{XYk}$ |
-| se(${\hat\beta_{XYk}}$)$^{2nd}$ | Standard error for $\hat\beta_{XYk}$ including second term from delta expansion method |
+| se(${\hat\beta_{XYk}}$) $^{2nd}$ | Standard error for $\hat\beta_{XYk}$ including second term from delta expansion method |
 | $\hat\Delta{{\beta_{XY}}}= {\hat\beta_{XY2}} - {\hat\beta_{XY1}}$ | Estimated difference in causal effect across strata |
 | $Z_{\Delta\hat\beta_{XY}}$ | Z-statistic for $\hat\Delta{{\beta_{XY}}}$ | 
 | $p_{Z_{\Delta\hat\beta_{XY}}}$ | *p*-value for $Z_{\Delta\hat\beta_{XY}}$ |
 
-The above per-replicate metrics were aggregated and summarized across all 100 replicates of a subscenario in [`scripts/01_summarize_scenario_results.R`](/02_summarize_and_plot_results/scripts/01_summarize_scenario_results.R). Performance metrics considered across replicates were:
+The above per-replicate metrics were aggregated and summarized across all 100 replicates of a subscenario in [`scripts/01_summarize_scenario_results.R`](/simulations/1.Individual_level_data_1IV/02_summarize_and_plot_results/scripts/01_summarize_scenario_results.R). Performance metrics considered across replicates were:
 
 - Bias (mean error)
 - Mean absolute error (MAE)
 - Type I error rate
 - Power
 
-Results across subscenarios of a varying parameter scenario were plotted in [`scripts/02_plot_scenario_results.R`](/simulations/1.Individual_level_data_1IV//02_summarize_and_plot_results/scripts/02_plot_scenario_results.R) and [`scripts/03_plot_main_scenario_results.R`](/simulations/1.Individual_level_data_1IV/02_summarize_and_plot_results/scripts/03_plot_main_scenario_results.R).
+Results across subscenarios of a varying parameter scenario were plotted in [`scripts/02_plot_scenario_results.R`](/simulations/1.Individual_level_data_1IV/02_summarize_and_plot_results/scripts/02_plot_scenario_results.R) and [`scripts/03_plot_main_scenario_results.R`](/simulations/1.Individual_level_data_1IV/02_summarize_and_plot_results/scripts/03_plot_main_scenario_results.R).
 
 
 ---
