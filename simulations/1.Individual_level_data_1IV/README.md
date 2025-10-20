@@ -18,7 +18,7 @@ The effect of these parameters was interrogated for each in isolation and in com
 ## Data-generating mechanisms
 
 ### 0. Definition of simulation scenarios
-[`00_define_scenarios/`](/00_define_scenarios/) folder. 
+[`00_define_scenarios/`](/simulations/1.Individual_level_data_1IV/00_define_scenarios/) folder. 
 
 ---
 
@@ -54,13 +54,13 @@ The following were the values considered for each parameter, spanning ranges bas
 
 **Scenarios 0,0**: $\Delta{\beta_{GX}}= 0, \Delta{\beta_{XY}}= 0$
 
-Defined in [`scripts/01_define_00_scenarios.R`](/00_define_scenarios/scripts/01_define_00_scenarios.R).
+Defined in [`scripts/01_define_00_scenarios.R`](/simulations/1.Individual_level_data_1IV/00_define_scenarios/scripts/01_define_00_scenarios.R).
 
 Assess the rate of falsely detected between-strata differences (i.e. type I error rate) in the genetic effect on the exposure and the exposure effect on the outcome, across the 16 varying parameter(s) subscenarios presented above.
 
 **Scenario 0,1**: $\Delta{\beta_{GX}}= 0, \Delta{\beta_{XY}}≠ 0$
 
-Defined in [`scripts/02_define_01_scenarios.R`](/00_define_scenarios/scripts/02_define_01_scenarios.R).
+Defined in [`scripts/02_define_01_scenarios.R`](/simulations/1.Individual_level_data_1IV/00_define_scenarios/scripts/02_define_01_scenarios.R).
 
 Assess the rate of falsely detected between-strata differences in the genetic effect on the exposure and the rate of truly detected between-strata differences (i.e. power) in the causal effect of the exposure on the outcome, for the following difference sizes:
 
@@ -76,7 +76,7 @@ each across the 16 subscenarios presented above.
 
 **Scenario 1,0**: $\Delta{\beta_{GX}}≠ 0, \Delta{\beta_{XY}}= 0$
 
-Defined in [`scripts/03_define_10_scenarios.R`](/00_define_scenarios/scripts/03_define_10_scenarios.R).
+Defined in [`scripts/03_define_10_scenarios.R`](/simulations/1.Individual_level_data_1IV/00_define_scenarios/scripts/03_define_10_scenarios.R).
 
 Assess the rate of truly detected between-strata differences in the genetic effect on the exposure and the rate of falsely detected between-strata differences in the causal effect of the exposure on the outcome, for the following difference sizes:
 
@@ -91,7 +91,7 @@ each across the 16 subscenarios presented above.
 
 **Scenario 1,1**: $\Delta{\beta_{GX}}≠ 0, \Delta{\beta_{XY}}≠ 0$
 
-Defined in [`scripts/04_define_11_scenarios.R`](/00_define_scenarios/scripts/04_define_11_scenarios.R).
+Defined in [`scripts/04_define_11_scenarios.R`](/simulations/1.Individual_level_data_1IV/00_define_scenarios/scripts/04_define_11_scenarios.R).
 
 Assess the rate of truly detected between-strata differences in the genetic effect on the exposure and the causal effect of the exposure on the outcome, for each combination of $\Delta\beta_{GX}$  = {-0.6  -0.2  0.2  0.6  1.0  1.4} and $\Delta\beta_{XY}$  = {-1.7  -1.2  -0.7  -0.2  0.3  0.8  1.3}, each, across the 16 subscenarios presented above.
 
@@ -100,14 +100,14 @@ In total, 896 subscenarios were explored.
 
 
 ### 1. Run simulation replicates per subscenario 
-[`01_run_replicates_x_scenario/`](/01_run_replicates_x_scenario/) folder. 
+[`01_run_replicates_x_scenario/`](/simulations/1.Individual_level_data_1IV/01_run_replicates_x_scenario/) folder. 
 
 ---
 
 **Simulation framework** 
 
 According to each subscenario parameters, we simulated additively modelled genotypes $G$ and a continuous exposure $X$ and outcome $Y$ for unrelated individuals across the strata of a dichotomous stratifying variable K $=k\in$ {1,2}, genetic associations with $X$ and $Y$ were tested and causal effects estimated in [`scripts/01_simulate_replicates_x_scenario.R`](/01_run_replicates_x_scenario/scripts/01_simulate_replicates_x_scenario.R) for 100 replicates. 
-Per-subscenario replicates were run with [`scripts/02_run_01_across_scenarios.R`](/01_run_replicates_x_scenario/scripts/02_run_01_across_scenarios.R) taking each subscenario parameters from [`00_define_scenarios/outputs`](/00_define_scenarios/outputs/). This was run separately for all subscenarios of each main scenario (0,0, 0,1, 1,0, and 1,1).  
+Per-subscenario replicates were run with [`scripts/02_run_01_across_scenarios.R`](/simulations/1.Individual_level_data_1IV/01_run_replicates_x_scenario/scripts/02_run_01_across_scenarios.R) taking each subscenario parameters from [`00_define_scenarios/outputs`](/00_define_scenarios/outputs/). This was run separately for all subscenarios of each main scenario (0,0, 0,1, 1,0, and 1,1).  
 
 For each replicate $i = 1,...,100$ of a subscenario we:
 
@@ -176,7 +176,7 @@ For each replicate $i = 1,...,100$ of a subscenario we:
 ## Estimands and performance assessment
 
 ### 2. Summarize and plot results per subscenario 
-[`02_summarize_and_plot_results/`](/02_summarize_and_plot_results/) folder.
+[`02_summarize_and_plot_results/`](/simulations/1.Individual_level_data_1IV/02_summarize_and_plot_results/) folder.
 
 ---
 
@@ -218,16 +218,16 @@ The above per-replicate metrics were aggregated and summarized across all 100 re
 - Type I error rate
 - Power
 
-Results across subscenarios of a varying parameter scenario were plotted in [`scripts/02_plot_scenario_results.R`](/02_summarize_and_plot_results/scripts/02_plot_scenario_results.R) and [`scripts/03_plot_main_scenario_results.R`](/02_summarize_and_plot_results/scripts/03_plot_main_scenario_results.R).
+Results across subscenarios of a varying parameter scenario were plotted in [`scripts/02_plot_scenario_results.R`](/simulations/1.Individual_level_data_1IV//02_summarize_and_plot_results/scripts/02_plot_scenario_results.R) and [`scripts/03_plot_main_scenario_results.R`](/simulations/1.Individual_level_data_1IV/02_summarize_and_plot_results/scripts/03_plot_main_scenario_results.R).
 
 
 ---
 
 ## Supplementary analyses
-[`Supplementary_analyses/`](/Supplementary_analyses/) folder.
+[`Supplementary_analyses/`](/simulations/1.Individual_level_data_1IV/Supplementary_analyses/) folder.
 
 ### 1.0  Simulations with varying βxʏ₁ and βux effect on Y.
-[`01_BXY_U_effects/`](/Supplementary_analyses/01_BXY_U_effects/) subfolder.
+[`01_BXY_U_effects/`](/simulations/1.Individual_level_data_1IV/Supplementary_analyses/01_BXY_U_effects/) subfolder.
 
 Repeated simulations for 0,0 increasing $\beta_{XY1}$ subscenarios with zero and non-zero $\beta_{UX}$ on $Y$ to examine the role of the unmeasured confounder $U$'s indirect effect on $Y$ (via $X$) on genetic and causal effect estimates.
 
